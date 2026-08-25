@@ -3,9 +3,10 @@ import { requireTenantAccess } from "@/lib/tenant/access";
 import { prisma } from "@/lib/db";
 import { getTenantTrial } from "@/lib/trial";
 import { listPagesForTenant } from "@/lib/tenant/data";
+import { getRootDomain } from "@/lib/tenant/root-domain";
 
 function siteBase(slug: string) {
-  const root = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "localhost:3000";
+  const root = getRootDomain();
   const protocol = root.includes("localhost") ? "http" : "https";
   return `${protocol}://${slug}.${root}`;
 }

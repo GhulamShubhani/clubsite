@@ -1,5 +1,6 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { getDefaultTrialWindow } from "@/lib/trial";
+import { getRootDomain } from "@/lib/tenant/root-domain";
 
 type DbClient = PrismaClient | Prisma.TransactionClient;
 
@@ -24,7 +25,7 @@ export async function createTenantWorkspace(
     },
   });
 
-  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "localhost:3000";
+  const rootDomain = getRootDomain();
   const hostname = `${input.slug}.${rootDomain}`;
 
   await db.domain.create({

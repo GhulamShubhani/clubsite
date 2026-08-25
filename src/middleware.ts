@@ -3,6 +3,7 @@ import {
   resolveHostnameKind,
   TENANT_HEADERS,
 } from "@/lib/tenant/hostname";
+import { getRootDomain } from "@/lib/tenant/root-domain";
 
 /**
  * Dynamic subdomain + custom-domain routing:
@@ -15,8 +16,7 @@ import {
  */
 export function middleware(request: NextRequest) {
   const host = request.headers.get("host") ?? "localhost:3000";
-  const rootDomain =
-    process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "localhost:3000";
+  const rootDomain = getRootDomain();
   const resolution = resolveHostnameKind(host, rootDomain);
   const requestHeaders = new Headers(request.headers);
 

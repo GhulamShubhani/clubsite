@@ -7,14 +7,11 @@
  * Custom: club.example.com → potential custom domain (resolved via Domain table)
  */
 
+import { getRootDomain, isPlatformHost, stripPort } from "@/lib/tenant/root-domain";
+
 export type HostnameResolution =
   | { kind: "platform" }
   | { kind: "tenant"; slug: string; hostname: string };
-
-function stripPort(host: string): string {
-  const withoutPort = host.replace(/:\d+$/, "");
-  return withoutPort.toLowerCase();
-}
 
 function isPlatformApex(host: string, root: string): boolean {
   return host === root || host === "www." + root;
@@ -62,12 +59,11 @@ export function extractSlugFromHostname(
  */
 export function resolveHostnameKind(
   hostname: string,
-  rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "localhost:3000",
+  rootDomain = getRootDomain(),
 ): HostnameResolution {
   const host = stripPort(hostname);
-  const root = stripPort(rootDomain);
 
-  if (isPlatformApex(host, root)) {
+  if (isPlatformHost(hostname, rootDomain)) {
     return { kind: "platform" };
   }
 
