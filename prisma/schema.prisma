@@ -1,0 +1,414 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MembershipRole {
+  OWNER
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  EXPIRED
+}
+
+enum PageStatus {
+  DRAFT
+  PUBLISHED
+  HIDDEN
+}
+
+enum PageVersionKind {
+  DRAFT
+  PUBLISHED
+  HISTORY
+}
+
+enum MatchStatus {
+  UPCOMING
+  LIVE
+  COMPLETED
+  CANCELED
+}
+
+model User {
+  id           String       @id @default(cuid())
+  email        String       @unique
+  passwordHash String
+  fullName     String
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  memberships  Membership[]
+  auditLogs    AuditLog[]
+}
+
+model Tenant {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships  Membership[]
+  website      Website?
+  domains      Domain[]
+  media        Media[]
+  subscription Subscription?
+  analytics    AnalyticsEvent[]
+  auditLogs    AuditLog[]
+  teams        Team[]
+  players      Player[]
+  tournaments  Tournament[]
+  matches      Match[]
+  events       ClubEvent[]
+  sponsors     Sponsor[]
+  streams      Stream[]
+  leaderboards Leaderboard[]
+}
+
+model Membership {
+  id        String         @id @default(cuid())
+  tenantId  String
+  userId    String
+  role      MembershipRole @default(OWNER)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, userId])
+  @@index([userId])
+  @@index([tenantId])
+}
+
+model Website {
+  id             String   @id @default(cuid())
+  tenantId       String   @unique
+  name           String
+  templateKey    String?
+  seoTitle       String?
+  seoDescription String?
+  faviconUrl     String?
+  ogImageUrl     String?
+  canonicalUrl   String?
+  robotsIndex    Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  tenant     Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  pages      Page[]
+  theme      Theme?
+  navigation Navigation[]
+}
+
+model Page {
+  id             String     @id @default(cuid())
+  websiteId      String
+  tenantId       String
+  title          String
+  path           String
+  sortOrder      Int        @default(0)
+  status         PageStatus @default(DRAFT)
+  seoTitle       String?
+  seoDescription String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  website  Website       @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  versions PageVersion[]
+
+  @@unique([websiteId, path])
+  @@index([tenantId])
+  @@index([websiteId, sortOrder])
+}
+
+model PageVersion {
+  id          String          @id @default(cuid())
+  pageId      String
+  tenantId    String
+  kind        PageVersionKind
+  version     Int             @default(1)
+  content     Json
+  publishedAt DateTime?
+  createdAt   DateTime        @default(now())
+  createdById String?
+
+  page Page @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@unique([pageId, kind, version])
+  @@index([tenantId])
+  @@index([pageId, kind])
+}
+
+model Theme {
+  id        String   @id @default(cuid())
+  websiteId String   @unique
+  tenantId  String
+  tokens    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}
+
+model Navigation {
+  id        String   @id @default(cuid())
+  websiteId String
+  tenantId  String
+  key       String   @default("main")
+  items     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@unique([websiteId, key])
+  @@index([tenantId])
+}
+
+model Media {
+  id           String   @id @default(cuid())
+  tenantId     String
+  filename     String
+  originalName String
+  mimeType     String
+  sizeBytes    Int
+  url          String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}
+
+model Domain {
+  id         String    @id @default(cuid())
+  tenantId   String
+  hostname   String    @unique
+  isPrimary  Boolean   @default(true)
+  isCustom   Boolean   @default(false)
+  verifiedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}
+
+model Subscription {
+  id            String             @id @default(cuid())
+  tenantId      String             @unique
+  planKey       String             @default("trial")
+  status        SubscriptionStatus @default(TRIAL)
+  trialStartsAt DateTime
+  trialEndsAt   DateTime
+  startsAt      DateTime?
+  endsAt        DateTime?
+  pageLimit     Int                @default(20)
+  storageMbLimit Int               @default(500)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
+
+model AnalyticsEvent {
+  id         String   @id @default(cuid())
+  tenantId   String
+  path       String
+  referrer   String?
+  userAgent  String?
+  deviceType String?
+  country    String?
+  createdAt  DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  userId    String?
+  action    String
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, createdAt])
+}
+
+model Template {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String?
+  previewUrl  String?
+  config      Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PlatformSetting {
+  id                  String   @id @default("default")
+  defaultTrialMinutes Int      @default(60)
+  updatedAt           DateTime @updatedAt
+}
+
+// --- Gaming entities (tenant-scoped) ---
+
+model Team {
+  id          String   @id @default(cuid())
+  tenantId    String
+  name        String
+  tag         String?
+  logoUrl     String?
+  game        String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  players Player[]
+
+  @@index([tenantId])
+}
+
+model Player {
+  id        String   @id @default(cuid())
+  tenantId  String
+  teamId    String?
+  name      String
+  gamertag  String?
+  role      String?
+  avatarUrl String?
+  stats     Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  team   Team?  @relation(fields: [teamId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([teamId])
+}
+
+model Tournament {
+  id          String    @id @default(cuid())
+  tenantId    String
+  name        String
+  game        String?
+  prizePool   String?
+  startsAt    DateTime?
+  endsAt      DateTime?
+  description String?
+  bracket     Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  matches Match[]
+
+  @@index([tenantId])
+}
+
+model Match {
+  id           String      @id @default(cuid())
+  tenantId     String
+  tournamentId String?
+  title        String
+  game         String?
+  status       MatchStatus @default(UPCOMING)
+  startsAt     DateTime?
+  teamAName    String?
+  teamBName    String?
+  scoreA       Int?
+  scoreB       Int?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  tenant     Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tournament Tournament? @relation(fields: [tournamentId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([tournamentId])
+}
+
+model ClubEvent {
+  id          String    @id @default(cuid())
+  tenantId    String
+  title       String
+  description String?
+  location    String?
+  startsAt    DateTime?
+  endsAt      DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}
+
+model Sponsor {
+  id        String   @id @default(cuid())
+  tenantId  String
+  name      String
+  logoUrl   String?
+  websiteUrl String?
+  tier      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}
+
+model Stream {
+  id        String   @id @default(cuid())
+  tenantId  String
+  title     String
+  platform  String
+  url       String
+  embedUrl  String?
+  isLive    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}
+
+model Leaderboard {
+  id        String   @id @default(cuid())
+  tenantId  String
+  name      String
+  game      String?
+  entries   Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}

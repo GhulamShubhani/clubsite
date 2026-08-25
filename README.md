@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Clubshop
 
-## Getting Started
+Multi-tenant no-code website platform for gaming clubs (Next.js + Prisma + Supabase PostgreSQL).
 
-First, run the development server:
+Aligned with the *Gaming Club No-Code Website Platform* client proposal.
+
+## Setup
+
+1. Copy `.env.example` → `.env` (URL-encode `@` in DB passwords as `%40`).
+2. `npm install`
+3. `npx prisma db push`
+4. `npm run db:seed`
+5. `npm run dev`
+
+- Platform: http://localhost:3000  
+- Club site: http://{slug}.localhost:3000  
+- Admin: http://localhost:3000/admin  
+
+## Proposal coverage
+
+| Area | Status |
+|------|--------|
+| Landing + registration (slug check) | Done |
+| Tenant + subdomain + configurable trial | Done |
+| Strict tenant isolation | Done |
+| Dynamic hostname → tenant routing | Done |
+| Admin (website, pages, builder, templates, media, nav, theme, SEO, analytics, subscription, domains, members, account) | Done |
+| 8 templates + apply | Done |
+| Page CRUD: create/rename/delete/duplicate/reorder/hide/publish | Done |
+| Visual builder (library, canvas, properties, undo/redo, devices) | Done |
+| Standard + gaming components | Done |
+| Hero layouts + navbar customization | Done |
+| TipTap rich text | Done |
+| Style + responsive overrides | Done |
+| Draft / preview / publish | Done |
+| Version history restore + publish previous | Done |
+| Media upload / search / rename / builder picker | Done |
+| Public render + theme + SEO metadata + sitemap/robots | Done |
+| Roles (Owner/Admin/Editor/Viewer) | Done |
+| Analytics (views, unique, top pages, referrers, device) | Done |
+| Plans (Trial/Starter/Pro/Business) + limits | Done |
+| Custom domains (map + verify MVP) | Done |
+| Rate limit + security headers + sanitize + audit | Done |
+| Contact form + live countdown | Done |
+
+## Deferred (post-MVP)
+
+- Stripe/payment checkout for plan upgrades
+- Real DNS TXT/CNAME proof for custom domains
+
+## Verify
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run test:csf
 ```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
