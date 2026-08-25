@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import type { PageContent, PageSection } from "@/lib/page-schema";
-import { themeTokensToCssVars } from "@/lib/tenant/public-site";
+import { themeTokensToCssVars } from "@/lib/tenant/public-site-utils";
 import { SectionRenderer } from "./SectionRenderer";
 
 export type RenderDevice = "desktop" | "tablet" | "mobile";

@@ -11,6 +11,11 @@
  * 3. DATABASE_URL as-is (local dev)
  */
 export function resolveDatabaseUrl(): string {
+  // Never run DB URL resolution in the browser (client bundles must not import db.ts).
+  if (typeof window !== "undefined") {
+    throw new Error("Database access is server-only");
+  }
+
   const poolerOverride = process.env.DATABASE_POOLER_URL?.trim();
   if (poolerOverride) return poolerOverride;
 
