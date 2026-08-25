@@ -50,18 +50,23 @@ Aligned with the *Gaming Club No-Code Website Platform* client proposal.
 
 ## Deploy on Vercel
 
-Vercel serverless **cannot** use Supabase’s direct DB URL (port **5432**). You must use the **Transaction pooler** (port **6543**).
+Vercel serverless **cannot** use Supabase’s direct DB URL (port **5432**). Use one of these:
+
+**Option A (automatic):** Keep your existing direct `DATABASE_URL` on Vercel — the app auto-rewrites it to the Supabase Transaction pooler when `VERCEL=1`. Set `SUPABASE_REGION` if your project is not in `ap-south-1` (find region in Supabase → Project Settings → General).
+
+**Option B (explicit, recommended):** Set pooler URLs in Vercel env vars:
 
 1. In [Supabase](https://supabase.com/dashboard) → your project → **Connect** → **ORMs** → **Prisma**, copy:
-   - **Transaction pooler** → `DATABASE_URL` (includes `?pgbouncer=true`)
+   - **Transaction pooler** → `DATABASE_URL` or `DATABASE_POOLER_URL` (includes `?pgbouncer=true`)
    - **Direct connection** → `DIRECT_URL`
 2. URL-encode `@` in the password as `%40`.
 3. In Vercel → **Project → Settings → Environment Variables**, set for **Production** (and Preview if needed):
 
    | Variable | Value |
    |----------|--------|
-   | `DATABASE_URL` | Pooler URL, port **6543**, `?pgbouncer=true&sslmode=require` |
+   | `DATABASE_URL` | Pooler URL, port **6543**, `?pgbouncer=true&connection_limit=1&sslmode=require` |
    | `DIRECT_URL` | Direct URL, port **5432**, `?sslmode=require` |
+   | `SUPABASE_REGION` | Optional — only if using auto-rewrite (e.g. `ap-south-1`) |
    | `AUTH_SECRET` | Random secret (`openssl rand -base64 32`) |
    | `AUTH_URL` | `https://clubsite-tau.vercel.app` (your production URL) |
    | `NEXT_PUBLIC_ROOT_DOMAIN` | `clubsite-tau.vercel.app` (no `https://`) |

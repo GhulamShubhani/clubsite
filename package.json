@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
-    "postinstall": "prisma generate",
+    "build": "node scripts/ensure-prisma-env.cjs && prisma generate && next build",
+    "postinstall": "node scripts/ensure-prisma-env.cjs && prisma generate",
     "start": "next start",
     "lint": "eslint",
     "db:generate": "prisma generate",
