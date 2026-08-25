@@ -636,8 +636,8 @@ function SortableSection({
       style={style}
       className={
         selected
-          ? "relative outline outline-2 outline-offset-[-2px] outline-sky-500"
-          : "relative hover:outline hover:outline-1 hover:outline-offset-[-1px] hover:outline-zinc-300"
+          ? "relative outline-2 -outline-offset-2 outline-sky-500"
+          : "relative hover:outline-1 hover:-outline-offset-1 hover:outline-zinc-300"
       }
       onClick={(e) => {
         e.stopPropagation();
@@ -717,7 +717,7 @@ function BuilderCanvas() {
         onClick={() => select(null)}
       >
         <div
-          className={`mx-auto mb-16 min-h-[480px] rounded-lg border border-zinc-200 bg-white shadow-sm ${widthClass}`}
+          className={`mx-auto mb-16 min-h-120 rounded-lg border border-zinc-200 bg-white shadow-sm ${widthClass}`}
         >
           {sections.length === 0 ? (
             <div className="flex h-64 items-center justify-center text-sm text-zinc-400">

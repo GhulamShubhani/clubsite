@@ -245,7 +245,7 @@ export default function AdminPagesPage() {
                 <div className="min-w-0 flex-1 space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
                     <input
-                      className="min-w-[12rem] flex-1 rounded-md border border-zinc-300 px-2 py-1.5 font-medium text-zinc-900"
+                      className="min-w-48 flex-1 rounded-md border border-zinc-300 px-2 py-1.5 font-medium text-zinc-900"
                       value={edit.title}
                       onChange={(e) =>
                         setEdits((prev) => ({

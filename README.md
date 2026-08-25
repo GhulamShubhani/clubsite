@@ -48,6 +48,29 @@ Aligned with the *Gaming Club No-Code Website Platform* client proposal.
 - Stripe/payment checkout for plan upgrades
 - Real DNS TXT/CNAME proof for custom domains
 
+## Deploy on Vercel
+
+Vercel serverless **cannot** use Supabase’s direct DB URL (port **5432**). You must use the **Transaction pooler** (port **6543**).
+
+1. In [Supabase](https://supabase.com/dashboard) → your project → **Connect** → **ORMs** → **Prisma**, copy:
+   - **Transaction pooler** → `DATABASE_URL` (includes `?pgbouncer=true`)
+   - **Direct connection** → `DIRECT_URL`
+2. URL-encode `@` in the password as `%40`.
+3. In Vercel → **Project → Settings → Environment Variables**, set for **Production** (and Preview if needed):
+
+   | Variable | Value |
+   |----------|--------|
+   | `DATABASE_URL` | Pooler URL, port **6543**, `?pgbouncer=true&sslmode=require` |
+   | `DIRECT_URL` | Direct URL, port **5432**, `?sslmode=require` |
+   | `AUTH_SECRET` | Random secret (`openssl rand -base64 32`) |
+   | `AUTH_URL` | `https://clubsite-tau.vercel.app` (your production URL) |
+   | `NEXT_PUBLIC_ROOT_DOMAIN` | `clubsite-tau.vercel.app` (no `https://`) |
+
+4. If the DB was idle, open Supabase and **restore/unpause** the project (free tier pauses after inactivity).
+5. Redeploy after saving env vars.
+
+Local `.env` can keep direct `5432` for both URLs; only production needs the pooler for `DATABASE_URL`.
+
 ## Verify
 
 ```bash

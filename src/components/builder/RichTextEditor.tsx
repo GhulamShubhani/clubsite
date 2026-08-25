@@ -18,7 +18,7 @@ export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm max-w-none min-h-[80px] px-2 py-1.5 text-sm text-zinc-900 focus:outline-none",
+          "prose prose-sm max-w-none min-h-20 px-2 py-1.5 text-sm text-zinc-900 focus:outline-none",
       },
     },
     onUpdate: ({ editor: ed }) => {
@@ -37,7 +37,7 @@ export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
 
   if (!editor) {
     return (
-      <div className="min-h-[100px] rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-400">
+      <div className="min-h-25 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-400">
         Loading editor…
       </div>
     );

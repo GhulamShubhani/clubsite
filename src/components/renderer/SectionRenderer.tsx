@@ -343,7 +343,7 @@ export function SectionRenderer({ section, className }: Props) {
         return (
           <Shell
             section={section}
-            className={`border-y-4 border-[var(--color-primary,#22c55e)] ${className ?? ""}`}
+            className={`border-y-4 border-(--color-primary,#22c55e) ${className ?? ""}`}
           >
             <div className="mx-auto max-w-5xl px-6 py-16">
               <HeroCopy
@@ -375,13 +375,13 @@ export function SectionRenderer({ section, className }: Props) {
           </div>
         );
         const imageCol = (
-          <div className={isSplit ? "min-h-[20rem]" : undefined}>
+          <div className={isSplit ? "min-h-80" : undefined}>
             <ImagePlaceholder
               src={imageUrl}
               alt={heading}
               className={
                 isSplit
-                  ? "h-full min-h-[20rem] w-full object-cover"
+                  ? "h-full min-h-80 w-full object-cover"
                   : "aspect-video w-full rounded-md bg-zinc-200 object-cover"
               }
             />
@@ -392,7 +392,7 @@ export function SectionRenderer({ section, className }: Props) {
             <div
               className={
                 isSplit
-                  ? "grid min-h-[24rem] grid-cols-1 lg:grid-cols-2"
+                  ? "grid min-h-96 grid-cols-1 lg:grid-cols-2"
                   : "mx-auto grid max-w-6xl items-center gap-8 lg:grid-cols-2"
               }
             >
@@ -952,7 +952,7 @@ export function SectionRenderer({ section, className }: Props) {
               return (
                 <div
                   key={i}
-                  className="min-w-[8rem] rounded-md border border-zinc-200 bg-white px-4 py-6 text-center"
+                  className="min-w-32 rounded-md border border-zinc-200 bg-white px-4 py-6 text-center"
                 >
                   <p className="font-semibold text-zinc-900">
                     {asString(row.name)}

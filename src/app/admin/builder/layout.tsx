@@ -25,7 +25,7 @@ export default function BuilderLayout({
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col bg-white">
+    <div className="fixed inset-0 z-100 flex flex-col bg-white">
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {children}
       </div>

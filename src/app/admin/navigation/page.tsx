@@ -104,13 +104,13 @@ export default function AdminNavigationPage() {
               value={item.label}
               onChange={(e) => updateItem(index, { label: e.target.value })}
               placeholder="Label"
-              className="min-w-[8rem] flex-1 rounded-md border border-zinc-300 px-3 py-2 text-sm"
+              className="min-w-32 flex-1 rounded-md border border-zinc-300 px-3 py-2 text-sm"
             />
             <input
               value={item.href}
               onChange={(e) => updateItem(index, { href: e.target.value })}
               placeholder="/path"
-              className="min-w-[8rem] flex-1 rounded-md border border-zinc-300 px-3 py-2 font-mono text-sm"
+              className="min-w-32 flex-1 rounded-md border border-zinc-300 px-3 py-2 font-mono text-sm"
             />
             <button
               type="button"

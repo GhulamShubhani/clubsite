@@ -81,7 +81,7 @@ export function EventCountdown({ targetDate, className }: Props) {
       {cells.map((c) => (
         <div
           key={c.label}
-          className="min-w-[4.5rem] rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-center"
+          className="min-w-18 rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-center"
         >
           <div className="text-2xl font-semibold text-zinc-900">
             {String(c.value).padStart(2, "0")}

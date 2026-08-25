@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { Prisma } from "@prisma/client";
+import type { InputJsonValue } from "@/lib/prisma/json";
 import { handleApiError, jsonOk } from "@/lib/api";
 import { prisma } from "@/lib/db";
 import { NotFoundError } from "@/lib/errors";
@@ -91,7 +91,7 @@ export async function POST(request: Request, { params }: Params) {
       const updated = await prisma.pageVersion.update({
         where: { id: draft.id },
         data: {
-          content: source.content as Prisma.InputJsonValue,
+          content: source.content as InputJsonValue,
           createdById: ctx.user.id,
         },
       });
@@ -107,7 +107,7 @@ export async function POST(request: Request, { params }: Params) {
           tenantId: ctx.tenant.id,
           kind: "DRAFT",
           version: 1,
-          content: source.content as Prisma.InputJsonValue,
+          content: source.content as InputJsonValue,
           createdById: ctx.user.id,
         },
       });
