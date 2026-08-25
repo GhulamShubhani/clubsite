@@ -107,7 +107,7 @@ export default async function HomePage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-full w-full max-w-3xl flex-col justify-center gap-6 px-6 py-16">
+    <main className="mx-auto flex min-h-full w-full max-w-3xl flex-col justify-center gap-6 bg-white px-6 py-16">
       <p className="text-sm uppercase tracking-[0.2em] text-zinc-500">
         Clubshop platform
       </p>

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { PasswordField } from "@/components/ui/PasswordField";
 
 function slugify(value: string) {
   return value
@@ -82,7 +83,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-full w-full max-w-md flex-col justify-center gap-6 px-6 py-16">
+    <main className="mx-auto flex min-h-full w-full max-w-md flex-col justify-center gap-6 bg-white px-6 py-16">
       <div>
         <h1 className="text-2xl font-semibold text-zinc-900">Create your website</h1>
         <p className="mt-1 text-sm text-zinc-600">
@@ -95,7 +96,7 @@ export default function RegisterPage() {
           required
           autoComplete="name"
           placeholder="Full name"
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
+          className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400"
         />
         <input
           name="email"
@@ -103,16 +104,12 @@ export default function RegisterPage() {
           required
           autoComplete="email"
           placeholder="Email"
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
+          className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400"
         />
-        <input
-          name="password"
-          type="password"
-          required
-          minLength={8}
+        <PasswordField
           autoComplete="new-password"
           placeholder="Password (min 8)"
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
+          minLength={8}
         />
         <input
           name="clubName"
@@ -128,7 +125,7 @@ export default function RegisterPage() {
               void checkSlug(next);
             }
           }}
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
+          className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400"
         />
         <div>
           <input
@@ -144,7 +141,7 @@ export default function RegisterPage() {
               setSlug(value);
               void checkSlug(value);
             }}
-            className="w-full rounded-md border border-zinc-300 px-3 py-2 font-mono text-sm"
+            className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 font-mono text-sm text-zinc-900 placeholder:text-zinc-400"
           />
           <p className="mt-1 text-xs text-zinc-500">
             Site: {slug || suggested || "your-slug"}.localhost:3000

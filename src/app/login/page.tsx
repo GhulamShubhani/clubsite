@@ -4,6 +4,7 @@ import { Suspense, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { PasswordField } from "@/components/ui/PasswordField";
 
 function LoginForm() {
   const router = useRouter();
@@ -39,7 +40,7 @@ function LoginForm() {
   }
 
   return (
-    <main className="mx-auto flex min-h-full w-full max-w-md flex-col justify-center gap-6 px-6 py-16">
+    <main className="mx-auto flex min-h-full w-full max-w-md flex-col justify-center gap-6 bg-white px-6 py-16">
       <div>
         <h1 className="text-2xl font-semibold text-zinc-900">Log in</h1>
         <p className="mt-1 text-sm text-zinc-600">
@@ -58,16 +59,9 @@ function LoginForm() {
           required
           autoComplete="email"
           placeholder="Email"
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
+          className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400"
         />
-        <input
-          name="password"
-          type="password"
-          required
-          autoComplete="current-password"
-          placeholder="Password"
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
-        />
+        <PasswordField autoComplete="current-password" placeholder="Password" />
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button
           type="submit"
