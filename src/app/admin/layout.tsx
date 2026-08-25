@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { requireTenantAccess } from "@/lib/tenant/access";
 import { UnauthorizedError } from "@/lib/errors";
+import { LogoutButton } from "@/components/admin/LogoutButton";
+import { getClubPublicUrl } from "@/lib/tenant/public-url";
 
 const NAV = [
   { href: "/admin", label: "Dashboard" },
@@ -40,9 +42,13 @@ export default async function AdminLayout({
   }
 
   let tenantName = "Club workspace";
+  let tenantSlug = "";
+  let publicUrl = "";
   try {
     const ctx = await requireTenantAccess({ minRole: "VIEWER" });
     tenantName = ctx.tenant.name;
+    tenantSlug = ctx.tenant.slug;
+    publicUrl = getClubPublicUrl(ctx.tenant.slug);
   } catch (error) {
     if (error instanceof UnauthorizedError) {
       redirect("/login");
@@ -54,12 +60,26 @@ export default async function AdminLayout({
     <div className="flex min-h-full bg-zinc-50 text-zinc-900">
       <aside className="flex w-56 shrink-0 flex-col border-r border-zinc-200 bg-zinc-100">
         <div className="border-b border-zinc-200 px-4 py-4">
-          <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">
+          <Link
+            href="/admin"
+            className="cursor-pointer text-xs font-medium uppercase tracking-wider text-zinc-500 hover:text-zinc-800"
+          >
             Admin
-          </p>
+          </Link>
           <p className="mt-1 truncate text-sm font-semibold text-zinc-900">
             {tenantName}
           </p>
+          {tenantSlug ? (
+            <a
+              href={publicUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-2 block cursor-pointer truncate text-xs text-emerald-700 underline hover:text-emerald-900"
+              title="Open live website"
+            >
+              Open website
+            </a>
+          ) : null}
         </div>
         <nav className="flex-1 overflow-y-auto px-2 py-3">
           <ul className="space-y-0.5">
@@ -67,7 +87,7 @@ export default async function AdminLayout({
               <li key={`${item.label}-${item.href}`}>
                 <Link
                   href={item.href}
-                  className="block rounded-md px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-200 hover:text-zinc-900"
+                  className="block cursor-pointer rounded-md px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-200 hover:text-zinc-900"
                 >
                   {item.label}
                 </Link>
@@ -75,6 +95,9 @@ export default async function AdminLayout({
             ))}
           </ul>
         </nav>
+        <div className="border-t border-zinc-200 px-2 py-3">
+          <LogoutButton />
+        </div>
       </aside>
       <main className="min-w-0 flex-1 overflow-y-auto p-6 md:p-8">{children}</main>
     </div>

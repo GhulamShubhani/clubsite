@@ -144,8 +144,12 @@ export default function RegisterPage() {
             className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 font-mono text-sm text-zinc-900 placeholder:text-zinc-400"
           />
           <p className="mt-1 text-xs text-zinc-500">
-            Site: {slug || suggested || "your-slug"}.localhost:3000
+            Your website link: /club/{slug || suggested || "your-name"}
             {slugStatus ? ` · ${slugStatus}` : ""}
+          </p>
+          <p className="mt-1 text-xs text-zinc-400">
+            Pick a short, easy name (letters and numbers). This becomes part of
+            your website address.
           </p>
         </div>
         {error && <p className="text-sm text-red-600">{error}</p>}

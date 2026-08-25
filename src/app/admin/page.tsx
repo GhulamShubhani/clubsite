@@ -3,20 +3,15 @@ import { requireTenantAccess } from "@/lib/tenant/access";
 import { prisma } from "@/lib/db";
 import { getTenantTrial } from "@/lib/trial";
 import { listPagesForTenant } from "@/lib/tenant/data";
-import { getRootDomain } from "@/lib/tenant/root-domain";
-
-function siteBase(slug: string) {
-  const root = getRootDomain();
-  const protocol = root.includes("localhost") ? "http" : "https";
-  return `${protocol}://${slug}.${root}`;
-}
+import { LiveSiteCard } from "@/components/admin/LiveSiteCard";
+import { getClubPublicUrl } from "@/lib/tenant/public-url";
 
 export default async function AdminDashboardPage() {
   const ctx = await requireTenantAccess({ minRole: "VIEWER" });
   const trial = await getTenantTrial(prisma, ctx.tenant.id);
   const pages = await listPagesForTenant(ctx);
   const recent = pages.slice(0, 8);
-  const previewUrl = siteBase(ctx.tenant.slug);
+  const publicUrl = getClubPublicUrl(ctx.tenant.slug);
   const firstPage = pages[0];
 
   return (
@@ -27,6 +22,12 @@ export default async function AdminDashboardPage() {
           {ctx.tenant.name} · {ctx.user.email} · {ctx.membership.role}
         </p>
       </div>
+
+      <LiveSiteCard
+        clubName={ctx.tenant.name}
+        slug={ctx.tenant.slug}
+        publicUrl={publicUrl}
+      />
 
       <section className="rounded-lg border border-zinc-200 bg-white p-4">
         <h2 className="font-medium text-zinc-900">Trial status</h2>
@@ -82,7 +83,7 @@ export default async function AdminDashboardPage() {
               </Link>
             ) : (
               <a
-                href={previewUrl}
+                href={publicUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="rounded-md border border-zinc-300 px-3 py-1.5 hover:bg-zinc-50"
