@@ -46,13 +46,14 @@ type BuilderShellProps = {
 };
 
 const HERO_LAYOUTS = [
-  "centered",
-  "text-left-image-right",
-  "image-left-text-right",
-  "full-width-bg",
-  "video-bg",
-  "split-screen",
-  "gaming-banner",
+  { value: "centered", label: "Simple text (centered)" },
+  { value: "full-width-bg", label: "Text on background image" },
+  { value: "carousel", label: "Carousel (each slide: image + text)" },
+  { value: "text-left-image-right", label: "Text left + image right" },
+  { value: "image-left-text-right", label: "Image left + text right" },
+  { value: "split-screen", label: "Split screen" },
+  { value: "video-bg", label: "Text on video background" },
+  { value: "gaming-banner", label: "Gaming banner" },
 ] as const;
 
 const STYLE_FIELDS = [
@@ -81,6 +82,125 @@ const RESPONSIVE_FIELDS = [
 
 function fieldClass() {
   return "mt-1 w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm";
+}
+
+function HeroCarouselEditor({
+  slides,
+  onChange,
+}: {
+  slides: Array<Record<string, unknown>>;
+  onChange: (slides: Array<Record<string, unknown>>) => void;
+}) {
+  const list =
+    slides.length > 0
+      ? slides
+      : [
+          {
+            imageUrl: "",
+            heading: "Slide 1 heading",
+            description: "Short text for this slide.",
+            ctaLabel: "Learn more",
+            ctaHref: "#",
+          },
+        ];
+
+  function updateSlide(index: number, patch: Record<string, unknown>) {
+    const next = list.map((s, i) => (i === index ? { ...s, ...patch } : s));
+    onChange(next);
+  }
+
+  function addSlide() {
+    onChange([
+      ...list,
+      {
+        imageUrl: "",
+        heading: `Slide ${list.length + 1}`,
+        description: "",
+        ctaLabel: "",
+        ctaHref: "#",
+      },
+    ]);
+  }
+
+  function removeSlide(index: number) {
+    onChange(list.filter((_, i) => i !== index));
+  }
+
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-zinc-500">
+        Each slide has its own background image and text.
+      </p>
+      {list.map((slide, index) => (
+        <div
+          key={index}
+          className="space-y-2 rounded-md border border-zinc-200 bg-zinc-50 p-2"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-zinc-700">
+              Slide {index + 1}
+            </span>
+            <button
+              type="button"
+              onClick={() => removeSlide(index)}
+              className="cursor-pointer text-xs text-red-600 underline"
+            >
+              Remove
+            </button>
+          </div>
+          <MediaPicker
+            label="Slide image"
+            value={String(slide.imageUrl ?? "")}
+            onSelect={(url) => updateSlide(index, { imageUrl: url })}
+          />
+          <label className="block">
+            <span className="text-xs text-zinc-500">Heading</span>
+            <input
+              className={fieldClass()}
+              value={String(slide.heading ?? "")}
+              onChange={(e) => updateSlide(index, { heading: e.target.value })}
+            />
+          </label>
+          <label className="block">
+            <span className="text-xs text-zinc-500">Text</span>
+            <textarea
+              className={fieldClass()}
+              rows={2}
+              value={String(slide.description ?? "")}
+              onChange={(e) =>
+                updateSlide(index, { description: e.target.value })
+              }
+            />
+          </label>
+          <label className="block">
+            <span className="text-xs text-zinc-500">Button label</span>
+            <input
+              className={fieldClass()}
+              value={String(slide.ctaLabel ?? "")}
+              onChange={(e) =>
+                updateSlide(index, { ctaLabel: e.target.value })
+              }
+            />
+          </label>
+          <label className="block">
+            <span className="text-xs text-zinc-500">Button link</span>
+            <input
+              className={fieldClass()}
+              value={String(slide.ctaHref ?? "")}
+              onChange={(e) => updateSlide(index, { ctaHref: e.target.value })}
+            />
+          </label>
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={addSlide}
+        className="cursor-pointer rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-800 hover:bg-zinc-50"
+      >
+        + Add slide
+      </button>
+    </div>
+  );
 }
 
 function ComponentLibrary() {
@@ -260,34 +380,61 @@ function PropertiesPanel() {
             <label className="block">
               <span className="text-xs text-zinc-500">Layout</span>
               <select
-                className={fieldClass()}
+                className={`${fieldClass()} cursor-pointer`}
                 value={String(props.layout ?? "centered")}
-                onChange={(e) =>
-                  updateProps(selected.id, { layout: e.target.value })
-                }
+                onChange={(e) => {
+                  const layout = e.target.value;
+                  updateProps(selected.id, { layout });
+                  if (layout === "carousel" || layout === "full-width-bg") {
+                    updateStyles(selected.id, { padding: "0" });
+                  }
+                }}
               >
                 {HERO_LAYOUTS.map((layout) => (
-                  <option key={layout} value={layout}>
-                    {layout}
+                  <option key={layout.value} value={layout.value}>
+                    {layout.label}
                   </option>
                 ))}
               </select>
             </label>
-            <MediaPicker
-              label="Image"
-              value={String(props.imageUrl ?? "")}
-              onSelect={(url) => updateProps(selected.id, { imageUrl: url })}
-            />
-            <label className="block">
-              <span className="text-xs text-zinc-500">Video URL</span>
-              <input
-                className={fieldClass()}
-                value={String(props.videoUrl ?? "")}
-                onChange={(e) =>
-                  updateProps(selected.id, { videoUrl: e.target.value })
+
+            {String(props.layout) === "carousel" ? (
+              <HeroCarouselEditor
+                slides={
+                  Array.isArray(props.slides)
+                    ? (props.slides as Array<Record<string, unknown>>)
+                    : []
                 }
+                onChange={(slides) => updateProps(selected.id, { slides })}
               />
-            </label>
+            ) : (
+              <>
+                <MediaPicker
+                  label={
+                    String(props.layout) === "full-width-bg" ||
+                    String(props.layout) === "background-image"
+                      ? "Background image"
+                      : "Image"
+                  }
+                  value={String(props.imageUrl ?? "")}
+                  onSelect={(url) =>
+                    updateProps(selected.id, { imageUrl: url })
+                  }
+                />
+                {String(props.layout) === "video-bg" ? (
+                  <label className="block">
+                    <span className="text-xs text-zinc-500">Video URL</span>
+                    <input
+                      className={fieldClass()}
+                      value={String(props.videoUrl ?? "")}
+                      onChange={(e) =>
+                        updateProps(selected.id, { videoUrl: e.target.value })
+                      }
+                    />
+                  </label>
+                ) : null}
+              </>
+            )}
           </div>
         ) : null}
 

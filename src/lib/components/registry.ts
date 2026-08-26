@@ -66,6 +66,23 @@ export const COMPONENT_REGISTRY: Record<string, ComponentDefinition> = {
       buttons: [{ label: "Get started", href: "/join" }],
       imageUrl: "",
       videoUrl: "",
+      slides: [
+        {
+          imageUrl: "",
+          heading: "Welcome to the club",
+          description: "Compete, train, and grow together.",
+          ctaLabel: "Get started",
+          ctaHref: "/join",
+        },
+        {
+          imageUrl: "",
+          heading: "Join our next event",
+          description: "Tournaments, scrims, and community nights.",
+          ctaLabel: "See events",
+          ctaHref: "/events",
+        },
+      ],
+      carouselIntervalMs: 5000,
     },
     { padding: "4rem 1.5rem", background: "#09090b", color: "#fafafa" },
   ),

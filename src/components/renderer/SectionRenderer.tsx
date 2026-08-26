@@ -3,6 +3,7 @@ import type { PageSection } from "@/lib/page-schema";
 import { looksLikeHtml, sanitizeHtml } from "@/lib/security/sanitize";
 import { ContactForm } from "./ContactForm";
 import { EventCountdown } from "./EventCountdown";
+import { HeroCarousel, type HeroSlide } from "./HeroCarousel";
 import { NavbarSection } from "./NavbarSection";
 import type { RenderDevice } from "./PageRenderer";
 
@@ -300,7 +301,34 @@ export function SectionRenderer({
         single: cta,
       };
 
-      if (layout === "full-width-bg") {
+      if (layout === "carousel") {
+        const slides = asArray<HeroSlide>(p.slides);
+        const seeded =
+          slides.length > 0
+            ? slides
+            : [
+                {
+                  imageUrl,
+                  heading,
+                  description,
+                  ctaLabel: cta.label,
+                  ctaHref: cta.href,
+                },
+              ];
+        return (
+          <Shell
+            section={section}
+            className={`overflow-hidden p-0 ${className ?? ""}`}
+          >
+            <HeroCarousel
+              slides={seeded}
+              intervalMs={asNumber(p.carouselIntervalMs, 5000)}
+            />
+          </Shell>
+        );
+      }
+
+      if (layout === "full-width-bg" || layout === "background-image") {
         return (
           <Shell
             section={section}
