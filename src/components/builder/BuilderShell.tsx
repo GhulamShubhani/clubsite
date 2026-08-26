@@ -341,6 +341,16 @@ function PropertiesPanel() {
               />
               Sticky
             </label>
+            <label className="flex items-center gap-2 text-sm text-zinc-700">
+              <input
+                type="checkbox"
+                checked={props.mobileMenu !== false}
+                onChange={(e) =>
+                  updateProps(selected.id, { mobileMenu: e.target.checked })
+                }
+              />
+              Mobile menu button
+            </label>
             <label className="block">
               <span className="text-xs text-zinc-500">Height</span>
               <select
@@ -661,7 +671,7 @@ function SortableSection({
       >
         Drag
       </button>
-      <SectionRenderer section={resolved} />
+      <SectionRenderer section={resolved} device={device} />
     </div>
   );
 }

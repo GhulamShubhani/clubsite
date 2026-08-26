@@ -4,10 +4,13 @@ import { looksLikeHtml, sanitizeHtml } from "@/lib/security/sanitize";
 import { ContactForm } from "./ContactForm";
 import { EventCountdown } from "./EventCountdown";
 import { NavbarSection } from "./NavbarSection";
+import type { RenderDevice } from "./PageRenderer";
 
 type Props = {
   section: PageSection;
   className?: string;
+  /** Builder / preview device — used instead of CSS breakpoints for canvas width. */
+  device?: RenderDevice;
 };
 
 function asString(value: unknown, fallback = ""): string {
@@ -242,8 +245,13 @@ function HeroCopy({
   );
 }
 
-export function SectionRenderer({ section, className }: Props) {
+export function SectionRenderer({
+  section,
+  className,
+  device = "desktop",
+}: Props) {
   const p = section.props ?? {};
+  const compact = device === "mobile" || device === "tablet";
   const heading = asString(
     p.heading ?? p.title ?? p.name ?? p.text,
   );
@@ -263,7 +271,8 @@ export function SectionRenderer({ section, className }: Props) {
           ctaHref={asString(p.ctaHref, "#")}
           sticky={p.sticky === true || p.sticky === "true"}
           height={asString(p.height) || undefined}
-          mobileMenu={p.mobileMenu === true || p.mobileMenu === "true"}
+          mobileMenu={p.mobileMenu !== false && p.mobileMenu !== "false"}
+          device={device}
           style={styleFrom(section.styles)}
           className={className}
         />
@@ -392,8 +401,12 @@ export function SectionRenderer({ section, className }: Props) {
             <div
               className={
                 isSplit
-                  ? "grid min-h-96 grid-cols-1 lg:grid-cols-2"
-                  : "mx-auto grid max-w-6xl items-center gap-8 lg:grid-cols-2"
+                  ? compact
+                    ? "grid min-h-96 grid-cols-1"
+                    : "grid min-h-96 grid-cols-1 lg:grid-cols-2"
+                  : compact
+                    ? "mx-auto grid max-w-6xl grid-cols-1 items-center gap-8"
+                    : "mx-auto grid max-w-6xl items-center gap-8 lg:grid-cols-2"
               }
             >
               {imageFirst ? (

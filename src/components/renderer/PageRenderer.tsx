@@ -52,6 +52,7 @@ export function PageRenderer({
         <SectionRenderer
           key={section.id}
           section={mergeSectionForDevice(section, device)}
+          device={device}
         />
       ))}
     </div>
