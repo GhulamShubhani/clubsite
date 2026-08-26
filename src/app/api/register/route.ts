@@ -61,38 +61,43 @@ export async function POST(request: Request) {
 
     const passwordHash = await hash(data.password, 12);
 
-    const result = await prisma.$transaction(async (tx) => {
-      const user = await tx.user.create({
-        data: {
-          email,
-          fullName: data.fullName,
-          passwordHash,
-        },
-      });
+    // Sequential creates (no interactive $transaction).
+    // Supabase Transaction pooler / PgBouncer breaks Prisma interactive txs (P2028) on Vercel.
+    const user = await prisma.user.create({
+      data: {
+        email,
+        fullName: data.fullName,
+        passwordHash,
+      },
+    });
 
-      const workspace = await createTenantWorkspace(tx, {
+    let workspace: Awaited<ReturnType<typeof createTenantWorkspace>>;
+    try {
+      workspace = await createTenantWorkspace(prisma, {
         clubName: data.clubName,
         slug: data.slug,
         ownerUserId: user.id,
       });
-
-      return { user, ...workspace };
-    });
+    } catch (workspaceError) {
+      // Best-effort cleanup so a failed signup can be retried with the same email.
+      await prisma.user.delete({ where: { id: user.id } }).catch(() => undefined);
+      throw workspaceError;
+    }
 
     await writeAudit({
-      tenantId: result.tenant.id,
-      userId: result.user.id,
+      tenantId: workspace.tenant.id,
+      userId: user.id,
       action: "user.registered",
-      meta: { slug: result.tenant.slug },
+      meta: { slug: workspace.tenant.slug },
     });
 
     return NextResponse.json(
       {
         ok: true,
-        userId: result.user.id,
-        tenantId: result.tenant.id,
-        slug: result.tenant.slug,
-        trialEndsAt: result.subscription.trialEndsAt,
+        userId: user.id,
+        tenantId: workspace.tenant.id,
+        slug: workspace.tenant.slug,
+        trialEndsAt: workspace.subscription.trialEndsAt,
       },
       { status: 201 },
     );

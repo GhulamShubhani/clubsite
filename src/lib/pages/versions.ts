@@ -141,48 +141,57 @@ export async function publishPage(pageId: string, ctx?: TenantContext) {
 
   const currentPublished = page.versions.find((v) => v.kind === "PUBLISHED");
 
-  const result = await prisma.$transaction(async (tx) => {
-    if (currentPublished) {
-      const lastHistory = await tx.pageVersion.findFirst({
-        where: {
-          pageId: page.id,
-          kind: "HISTORY",
-          ...tenantScope(access),
-        },
-        orderBy: { version: "desc" },
-      });
+  // Sequential writes — avoid interactive $transaction (breaks on Supabase PgBouncer / Vercel).
+  let result: {
+    published: {
+      id: string;
+      version: number;
+      content: Prisma.JsonValue;
+      publishedAt: Date | null;
+    };
+    fromDraftVersion: number;
+  };
 
-      await tx.pageVersion.create({
-        data: {
-          pageId: page.id,
-          tenantId: access.tenant.id,
-          kind: "HISTORY",
-          version: (lastHistory?.version ?? 0) + 1,
-          content: currentPublished.content as Prisma.InputJsonValue,
-          publishedAt: currentPublished.publishedAt,
-          createdById: access.user.id,
-        },
-      });
+  if (currentPublished) {
+    const lastHistory = await prisma.pageVersion.findFirst({
+      where: {
+        pageId: page.id,
+        kind: "HISTORY",
+        ...tenantScope(access),
+      },
+      orderBy: { version: "desc" },
+    });
 
-      const published = await tx.pageVersion.update({
-        where: { id: currentPublished.id },
-        data: {
-          content: draft.content as Prisma.InputJsonValue,
-          version: currentPublished.version + 1,
-          publishedAt: new Date(),
-          createdById: access.user.id,
-        },
-      });
+    await prisma.pageVersion.create({
+      data: {
+        pageId: page.id,
+        tenantId: access.tenant.id,
+        kind: "HISTORY",
+        version: (lastHistory?.version ?? 0) + 1,
+        content: currentPublished.content as Prisma.InputJsonValue,
+        publishedAt: currentPublished.publishedAt,
+        createdById: access.user.id,
+      },
+    });
 
-      await tx.page.update({
-        where: { id: page.id },
-        data: { status: "PUBLISHED" },
-      });
+    const published = await prisma.pageVersion.update({
+      where: { id: currentPublished.id },
+      data: {
+        content: draft.content as Prisma.InputJsonValue,
+        version: currentPublished.version + 1,
+        publishedAt: new Date(),
+        createdById: access.user.id,
+      },
+    });
 
-      return { published, fromDraftVersion: draft.version };
-    }
+    await prisma.page.update({
+      where: { id: page.id },
+      data: { status: "PUBLISHED" },
+    });
 
-    const published = await tx.pageVersion.create({
+    result = { published, fromDraftVersion: draft.version };
+  } else {
+    const published = await prisma.pageVersion.create({
       data: {
         pageId: page.id,
         tenantId: access.tenant.id,
@@ -194,13 +203,13 @@ export async function publishPage(pageId: string, ctx?: TenantContext) {
       },
     });
 
-    await tx.page.update({
+    await prisma.page.update({
       where: { id: page.id },
       data: { status: "PUBLISHED" },
     });
 
-    return { published, fromDraftVersion: draft.version };
-  });
+    result = { published, fromDraftVersion: draft.version };
+  }
 
   await prisma.auditLog.create({
     data: {
