@@ -15,6 +15,7 @@ const ALLOWED = new Set([
   "image/png",
   "image/webp",
   "image/gif",
+  "image/svg+xml",
   "video/mp4",
 ]);
 
@@ -23,6 +24,7 @@ const EXT: Record<string, string> = {
   "image/png": ".png",
   "image/webp": ".webp",
   "image/gif": ".gif",
+  "image/svg+xml": ".svg",
   "video/mp4": ".mp4",
 };
 
@@ -39,7 +41,7 @@ export async function POST(request: Request) {
     const mimeType = file.type || "application/octet-stream";
     if (!ALLOWED.has(mimeType)) {
       throw new AppError(
-        "Only jpeg, png, webp, gif, and mp4 are allowed",
+        "Only jpeg, png, webp, gif, svg, and mp4 are allowed",
         400,
         "MIME_NOT_ALLOWED",
       );

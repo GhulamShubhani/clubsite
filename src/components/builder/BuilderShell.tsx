@@ -37,6 +37,7 @@ import { SectionRenderer } from "@/components/renderer/SectionRenderer";
 import { useBuilderStore } from "./builder-store";
 import { RichTextEditor } from "./RichTextEditor";
 import { MediaPicker } from "./MediaPicker";
+import { StyleField } from "./StyleField";
 
 type BuilderShellProps = {
   pageId: string;
@@ -342,13 +343,20 @@ function PropertiesPanel() {
             </label>
             <label className="block">
               <span className="text-xs text-zinc-500">Height</span>
-              <input
-                className={fieldClass()}
+              <select
+                className={`${fieldClass()} cursor-pointer`}
                 value={String(props.height ?? "")}
                 onChange={(e) =>
                   updateProps(selected.id, { height: e.target.value })
                 }
-              />
+              >
+                <option value="">Default</option>
+                <option value="48px">48px</option>
+                <option value="56px">56px</option>
+                <option value="64px">64px</option>
+                <option value="72px">72px</option>
+                <option value="80px">80px</option>
+              </select>
             </label>
           </div>
         ) : null}
@@ -381,16 +389,16 @@ function PropertiesPanel() {
             Styles
           </p>
           {STYLE_FIELDS.map(([key, labelText]) => (
-            <label key={key} className="mb-2 block">
-              <span className="text-xs text-zinc-500">{labelText}</span>
-              <input
-                className={`${fieldClass()} font-mono`}
-                value={String(styles[key] ?? "")}
-                onChange={(e) =>
-                  updateStyles(selected.id, { [key]: e.target.value })
-                }
-              />
-            </label>
+            <StyleField
+              key={key}
+              fieldKey={key}
+              label={labelText}
+              value={String(styles[key] ?? "")}
+              onChange={(next) =>
+                updateStyles(selected.id, { [key]: next })
+              }
+              className={fieldClass()}
+            />
           ))}
         </div>
 
@@ -402,18 +410,18 @@ function PropertiesPanel() {
             Editing overrides for: {device}
           </p>
           {RESPONSIVE_FIELDS.map(([key, labelText]) => (
-            <label key={key} className="mb-2 block">
-              <span className="text-xs text-zinc-500">{labelText}</span>
-              <input
-                className={`${fieldClass()} font-mono`}
-                value={String(responsive[key] ?? "")}
-                onChange={(e) =>
-                  updateResponsive(selected.id, device, {
-                    [key]: e.target.value,
-                  })
-                }
-              />
-            </label>
+            <StyleField
+              key={key}
+              fieldKey={key}
+              label={labelText}
+              value={String(responsive[key] ?? "")}
+              onChange={(next) =>
+                updateResponsive(selected.id, device, {
+                  [key]: next,
+                })
+              }
+              className={fieldClass()}
+            />
           ))}
         </div>
 
