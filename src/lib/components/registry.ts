@@ -142,12 +142,12 @@ export const COMPONENT_REGISTRY: Record<string, ComponentDefinition> = {
     "Grid",
     "standard",
     {
+      variant: "cards",
       columns: 3,
       heading: "Grid",
       items: [
-        { title: "Item 1", body: "Description" },
-        { title: "Item 2", body: "Description" },
-        { title: "Item 3", body: "Description" },
+        { title: "Item 1", body: "Description", mediaType: "none" },
+        { title: "Item 2", body: "Description", mediaType: "none" },
       ],
     },
     pad,

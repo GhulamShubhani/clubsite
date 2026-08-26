@@ -56,6 +56,15 @@ const HERO_LAYOUTS = [
   { value: "gaming-banner", label: "Gaming banner" },
 ] as const;
 
+const GRID_VARIANTS = [
+  { value: "cards", label: "Cards (bordered)" },
+  { value: "image-top", label: "Image on top" },
+  { value: "image-left", label: "Image left + text" },
+  { value: "overlay", label: "Image overlay + text" },
+  { value: "minimal", label: "Minimal (no border)" },
+  { value: "featured", label: "Featured (large first item)" },
+] as const;
+
 const STYLE_FIELDS = [
   ["width", "Width"],
   ["height", "Height"],
@@ -198,6 +207,151 @@ function HeroCarouselEditor({
         className="cursor-pointer rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-800 hover:bg-zinc-50"
       >
         + Add slide
+      </button>
+    </div>
+  );
+}
+
+function GridItemsEditor({
+  items,
+  onChange,
+}: {
+  items: Array<Record<string, unknown>>;
+  onChange: (items: Array<Record<string, unknown>>) => void;
+}) {
+  const list =
+    items.length > 0
+      ? items
+      : [{ title: "Item 1", body: "Description", mediaType: "none" }];
+
+  function updateItem(index: number, patch: Record<string, unknown>) {
+    const next = list.map((item, i) => (i === index ? { ...item, ...patch } : item));
+    onChange(next);
+  }
+
+  function addItem() {
+    onChange([
+      ...list,
+      {
+        title: `Item ${list.length + 1}`,
+        body: "Description",
+        mediaType: "none",
+        imageUrl: "",
+        videoUrl: "",
+        href: "",
+      },
+    ]);
+  }
+
+  function removeItem(index: number) {
+    onChange(list.filter((_, i) => i !== index));
+  }
+
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-zinc-500">
+        Add any number of items. Each can include text with an optional image or video.
+      </p>
+      {list.map((item, index) => {
+        const mediaType = String(item.mediaType ?? "none");
+        return (
+          <div
+            key={index}
+            className="space-y-2 rounded-md border border-zinc-200 bg-zinc-50 p-2"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-zinc-700">
+                Item {index + 1}
+              </span>
+              <button
+                type="button"
+                onClick={() => removeItem(index)}
+                disabled={list.length <= 1}
+                className="cursor-pointer text-xs text-red-600 underline disabled:cursor-not-allowed disabled:text-zinc-400 disabled:no-underline"
+              >
+                Remove
+              </button>
+            </div>
+            <label className="block">
+              <span className="text-xs text-zinc-500">Media</span>
+              <select
+                className={`${fieldClass()} cursor-pointer`}
+                value={mediaType}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  const patch: Record<string, unknown> = { mediaType: next };
+                  if (next === "none") {
+                    patch.imageUrl = "";
+                    patch.videoUrl = "";
+                  }
+                  updateItem(index, patch);
+                }}
+              >
+                <option value="none">Text only</option>
+                <option value="image">Image</option>
+                <option value="video">Video</option>
+              </select>
+              {mediaType === "none" ? (
+                <p className="mt-1 text-[11px] text-zinc-400">
+                  Select <strong className="font-medium text-zinc-500">Image</strong> above to upload or choose from your media library.
+                </p>
+              ) : null}
+            </label>
+            {mediaType === "image" ? (
+              <MediaPicker
+                label="Image"
+                value={String(item.imageUrl ?? "")}
+                onSelect={(url) => updateItem(index, { imageUrl: url })}
+              />
+            ) : null}
+            {mediaType === "video" ? (
+              <label className="block">
+                <span className="text-xs text-zinc-500">Video URL</span>
+                <input
+                  className={fieldClass()}
+                  placeholder="MP4 or YouTube/Vimeo embed URL"
+                  value={String(item.videoUrl ?? "")}
+                  onChange={(e) =>
+                    updateItem(index, { videoUrl: e.target.value })
+                  }
+                />
+              </label>
+            ) : null}
+            <label className="block">
+              <span className="text-xs text-zinc-500">Title</span>
+              <input
+                className={fieldClass()}
+                value={String(item.title ?? "")}
+                onChange={(e) => updateItem(index, { title: e.target.value })}
+              />
+            </label>
+            <label className="block">
+              <span className="text-xs text-zinc-500">Description</span>
+              <textarea
+                className={fieldClass()}
+                rows={2}
+                value={String(item.body ?? item.description ?? "")}
+                onChange={(e) => updateItem(index, { body: e.target.value })}
+              />
+            </label>
+            <label className="block">
+              <span className="text-xs text-zinc-500">Link (optional)</span>
+              <input
+                className={fieldClass()}
+                placeholder="https://"
+                value={String(item.href ?? "")}
+                onChange={(e) => updateItem(index, { href: e.target.value })}
+              />
+            </label>
+          </div>
+        );
+      })}
+      <button
+        type="button"
+        onClick={addItem}
+        className="cursor-pointer rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-800 hover:bg-zinc-50"
+      >
+        + Add item
       </button>
     </div>
   );
@@ -435,6 +589,56 @@ function PropertiesPanel() {
                 ) : null}
               </>
             )}
+          </div>
+        ) : null}
+
+        {selected.type === "grid" ? (
+          <div className="space-y-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-zinc-400">
+              Grid
+            </p>
+            <label className="block">
+              <span className="text-xs text-zinc-500">Layout style</span>
+              <select
+                className={`${fieldClass()} cursor-pointer`}
+                value={String(props.variant ?? "cards")}
+                onChange={(e) =>
+                  updateProps(selected.id, { variant: e.target.value })
+                }
+              >
+                {GRID_VARIANTS.map((v) => (
+                  <option key={v.value} value={v.value}>
+                    {v.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block">
+              <span className="text-xs text-zinc-500">Columns</span>
+              <select
+                className={`${fieldClass()} cursor-pointer`}
+                value={String(props.columns ?? 3)}
+                onChange={(e) =>
+                  updateProps(selected.id, {
+                    columns: Number.parseInt(e.target.value, 10),
+                  })
+                }
+              >
+                {[1, 2, 3, 4, 5, 6].map((n) => (
+                  <option key={n} value={n}>
+                    {n} column{n === 1 ? "" : "s"}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <GridItemsEditor
+              items={
+                Array.isArray(props.items)
+                  ? (props.items as Array<Record<string, unknown>>)
+                  : []
+              }
+              onChange={(items) => updateProps(selected.id, { items })}
+            />
           </div>
         ) : null}
 

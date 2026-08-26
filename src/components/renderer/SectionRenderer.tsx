@@ -3,6 +3,7 @@ import type { PageSection } from "@/lib/page-schema";
 import { looksLikeHtml, sanitizeHtml } from "@/lib/security/sanitize";
 import { ContactForm } from "./ContactForm";
 import { EventCountdown } from "./EventCountdown";
+import { GridSection, type GridItem, type GridVariant } from "./GridSection";
 import { HeroCarousel, type HeroSlide } from "./HeroCarousel";
 import { NavbarSection } from "./NavbarSection";
 import type { RenderDevice } from "./PageRenderer";
@@ -565,38 +566,59 @@ export function SectionRenderer({
 
     case "grid": {
       const children = asArray(p.children);
-      const items = children.length > 0 ? children : asArray(p.items);
+      const rawItems = children.length > 0 ? children : asArray(p.items);
+      const nestedItems = rawItems.filter(
+        (item) =>
+          typeof item === "object" &&
+          item !== null &&
+          "type" in item &&
+          typeof (item as Record<string, unknown>).type === "string",
+      );
+      const flatItems = rawItems.filter(
+        (item) =>
+          typeof item !== "object" ||
+          item === null ||
+          !("type" in item) ||
+          typeof (item as Record<string, unknown>).type !== "string",
+      ) as GridItem[];
+
+      if (nestedItems.length > 0) {
+        const columns = asNumber(p.columns, 3);
+        return (
+          <Shell section={section} className={className}>
+            {heading ? (
+              <HeadingBlock heading={heading} description={description} />
+            ) : null}
+            <ItemGrid
+              items={nestedItems}
+              columns={columns}
+              render={(item) => (
+                <SectionRenderer
+                  section={{
+                    id: asString(item.id, `${section.id}-child`),
+                    type: asString(item.type),
+                    props: (item.props as Record<string, unknown>) ?? item,
+                    styles: item.styles as Record<string, unknown> | undefined,
+                  }}
+                  device={device}
+                />
+              )}
+            />
+          </Shell>
+        );
+      }
+
+      const variant = asString(p.variant, "cards") as GridVariant;
       const columns = asNumber(p.columns, 3);
       return (
         <Shell section={section} className={className}>
-          {heading ? <HeadingBlock heading={heading} description={description} /> : null}
-          <ItemGrid
-            items={items}
+          <GridSection
+            heading={heading || undefined}
+            description={description || undefined}
+            items={flatItems}
+            variant={variant}
             columns={columns}
-            render={(item) => {
-              if (item.type && typeof item.type === "string") {
-                return (
-                  <SectionRenderer
-                    section={{
-                      id: asString(item.id, `${section.id}-child`),
-                      type: asString(item.type),
-                      props: (item.props as Record<string, unknown>) ?? item,
-                      styles: item.styles as Record<string, unknown> | undefined,
-                    }}
-                  />
-                );
-              }
-              return (
-                <div className="rounded-md border border-zinc-200 bg-white p-4">
-                  <h3 className="font-semibold text-zinc-900">
-                    {asString(item.title ?? item.heading ?? item.name, "Item")}
-                  </h3>
-                  <p className="mt-1 text-sm text-zinc-600">
-                    {asString(item.body ?? item.description)}
-                  </p>
-                </div>
-              );
-            }}
+            device={device}
           />
         </Shell>
       );
