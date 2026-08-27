@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { RenderDevice } from "./PageRenderer";
+import { site } from "./site-classes";
 
 export type GridVariant =
   | "cards"
@@ -176,7 +177,7 @@ function GridItemContent({
     return (
       <ItemShell
         href={href}
-        className={`group relative overflow-hidden rounded-lg bg-zinc-900 ${
+        className={`group relative overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] ${
           featured ? "min-h-[280px]" : "min-h-[220px]"
         }`}
       >
@@ -202,7 +203,7 @@ function GridItemContent({
     return (
       <ItemShell
         href={href}
-        className="flex flex-col overflow-hidden rounded-lg border border-zinc-200 bg-white sm:flex-row"
+        className={`flex flex-col overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] sm:flex-row`}
       >
         {hasMedia ? (
           <div className="sm:w-2/5">
@@ -213,8 +214,8 @@ function GridItemContent({
           </div>
         ) : null}
         <div className={`flex flex-1 flex-col justify-center p-4 ${hasMedia ? "" : "w-full"}`}>
-          <h3 className="font-semibold text-zinc-900">{title}</h3>
-          {body ? <p className="mt-1 text-sm text-zinc-600">{body}</p> : null}
+          <h3 className={site.h3}>{title}</h3>
+          {body ? <p className={`mt-1 ${site.muted}`}>{body}</p> : null}
         </div>
       </ItemShell>
     );
@@ -245,8 +246,8 @@ function GridItemContent({
           />
         ) : null}
         <div className="p-4">
-          <h3 className="font-semibold text-zinc-900">{title}</h3>
-          {body ? <p className="mt-1 text-sm text-zinc-600">{body}</p> : null}
+          <h3 className={site.h3}>{title}</h3>
+          {body ? <p className={`mt-1 ${site.muted}`}>{body}</p> : null}
         </div>
       </ItemShell>
     );
@@ -256,7 +257,7 @@ function GridItemContent({
   return (
     <ItemShell
       href={href}
-      className={`overflow-hidden rounded-md border border-zinc-200 bg-white ${
+      className={`overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] ${
         featured ? "p-6" : "p-4"
       }`}
     >
@@ -287,12 +288,12 @@ function HeadingBlock({
   return (
     <div className="mb-4">
       {heading ? (
-        <h2 className="text-2xl font-semibold tracking-tight text-zinc-900">
+        <h2 className={site.h2}>
           {heading}
         </h2>
       ) : null}
       {description ? (
-        <p className="mt-2 text-zinc-600">{description}</p>
+        <p className={`mt-2 ${site.body}`}>{description}</p>
       ) : null}
     </div>
   );

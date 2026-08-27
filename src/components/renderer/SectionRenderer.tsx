@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import type { PageSection } from "@/lib/page-schema";
 import { looksLikeHtml, sanitizeHtml } from "@/lib/security/sanitize";
+import { site } from "./site-classes";
 import { ContactForm } from "./ContactForm";
 import { EventCountdown } from "./EventCountdown";
 import { GridSection, type GridItem, type GridVariant } from "./GridSection";
@@ -38,11 +39,14 @@ function Shell({
   section,
   className,
   children,
+  inner = true,
 }: {
   section: PageSection;
   className?: string;
   children: ReactNode;
+  inner?: boolean;
 }) {
+  const skipInner = ["navbar", "footer", "hero"].includes(section.type);
   return (
     <section
       data-section-id={section.id}
@@ -50,7 +54,11 @@ function Shell({
       className={className}
       style={styleFrom(section.styles)}
     >
-      {children}
+      {inner && !skipInner ? (
+        <div className={site.sectionInner}>{children}</div>
+      ) : (
+        children
+      )}
     </section>
   );
 }
@@ -68,14 +76,14 @@ function HeadingBlock({
   return (
     <div className="mb-4">
       {heading ? (
-        <Tag className="text-2xl font-semibold tracking-tight text-zinc-900">
+        <Tag className={site.h2}>
           {heading}
         </Tag>
       ) : null}
       {description ? (
         <RichText
           value={description}
-          className="mt-2 text-zinc-600"
+          className={`mt-2 ${site.body}`}
           as="div"
         />
       ) : null}
@@ -104,7 +112,7 @@ function Buttons({
         <a
           key={`${btn.label}-${i}`}
           href={asString(btn.href, "#")}
-          className="inline-flex rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
+          className={site.btn}
         >
           {asString(btn.label, "Button")}
         </a>
@@ -125,7 +133,7 @@ function LinkList({
         <a
           key={`${link.label}-${i}`}
           href={asString(link.href, "#")}
-          className="hover:underline"
+          className={site.link}
         >
           {asString(link.label, "Link")}
         </a>
@@ -168,7 +176,7 @@ function ItemGrid({
 function ImagePlaceholder({
   src,
   alt,
-  className = "aspect-video w-full rounded-md bg-zinc-200 object-cover",
+  className = "aspect-video w-full rounded-md bg-[var(--color-surface)] object-cover",
 }: {
   src?: string;
   alt?: string;
@@ -420,7 +428,7 @@ export function SectionRenderer({
               className={
                 isSplit
                   ? "h-full min-h-80 w-full object-cover"
-                  : "aspect-video w-full rounded-md bg-zinc-200 object-cover"
+                  : "aspect-video w-full rounded-md bg-[var(--color-surface)] object-cover"
               }
             />
           </div>
@@ -477,7 +485,7 @@ export function SectionRenderer({
         | "h3";
       return (
         <Shell section={section} className={className}>
-          <Tag className="font-semibold tracking-tight text-zinc-900 text-2xl sm:text-3xl">
+          <Tag className={`${site.h2} text-2xl sm:text-3xl`}>
             {text}
           </Tag>
         </Shell>
@@ -489,7 +497,7 @@ export function SectionRenderer({
         <Shell section={section} className={className}>
           <RichText
             value={asString(p.text ?? p.description, "")}
-            className="leading-relaxed text-zinc-700"
+            className={`leading-relaxed ${site.body}`}
             as="div"
           />
         </Shell>
@@ -504,7 +512,7 @@ export function SectionRenderer({
               alt={asString(p.alt, heading)}
             />
             {asString(p.caption) ? (
-              <figcaption className="mt-2 text-center text-sm text-zinc-500">
+              <figcaption className="mt-2 text-center text-sm text-[var(--color-muted)]">
                 {asString(p.caption)}
               </figcaption>
             ) : null}
@@ -528,7 +536,7 @@ export function SectionRenderer({
               />
             </div>
           ) : (
-            <div className="flex aspect-video items-center justify-center rounded-md bg-zinc-200 text-sm text-zinc-500">
+            <div className="flex aspect-video items-center justify-center rounded-md bg-[var(--color-surface)] text-sm text-[var(--color-muted)]">
               Add a video URL
             </div>
           )}
@@ -550,17 +558,21 @@ export function SectionRenderer({
 
     case "card":
       return (
-        <Shell section={section} className={className}>
-          {imageUrl ? (
-            <ImagePlaceholder src={imageUrl} alt={heading} className="mb-3 aspect-video w-full rounded-md bg-zinc-200 object-cover" />
-          ) : null}
-          <h3 className="text-lg font-semibold text-zinc-900">
-            {heading || "Card"}
-          </h3>
-          {description ? (
-            <p className="mt-2 text-sm text-zinc-600">{description}</p>
-          ) : null}
-          <Buttons buttons={p.buttons} />
+        <Shell section={section} className={className} inner={false}>
+          <div className={site.card}>
+            {imageUrl ? (
+              <ImagePlaceholder
+                src={imageUrl}
+                alt={heading}
+                className={`mb-3 aspect-video w-full rounded-lg object-cover ${site.imageBg}`}
+              />
+            ) : null}
+            <h3 className={site.h3}>{heading || "Card"}</h3>
+            {description ? (
+              <p className={`mt-2 ${site.muted}`}>{description}</p>
+            ) : null}
+            <Buttons buttons={p.buttons} />
+          </div>
         </Shell>
       );
 
@@ -639,7 +651,7 @@ export function SectionRenderer({
                   alt={asString(item.caption ?? item.alt)}
                 />
                 {asString(item.caption) ? (
-                  <figcaption className="mt-2 text-sm text-zinc-500">
+                  <figcaption className="mt-2 text-sm text-[var(--color-muted)]">
                     {asString(item.caption)}
                   </figcaption>
                 ) : null}
@@ -652,7 +664,7 @@ export function SectionRenderer({
     case "divider":
       return (
         <Shell section={section} className={className}>
-          <hr className="border-zinc-200" />
+          <hr className="border-[var(--color-border)]" />
         </Shell>
       );
 
@@ -674,17 +686,18 @@ export function SectionRenderer({
     case "footer": {
       const links = asArray<{ label?: string; href?: string }>(p.links);
       return (
-        <Shell
-          section={section}
-          className={`space-y-4 ${className ?? ""}`}
-        >
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <span className="font-semibold">{asString(p.brand, "Brand")}</span>
-            <LinkList links={links} />
+        <Shell section={section} className={`space-y-4 ${className ?? ""}`} inner={false}>
+          <div className={`${site.sectionInner} space-y-4`}>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <span className="font-semibold text-[var(--color-text)]">
+                {asString(p.brand, "Brand")}
+              </span>
+              <LinkList links={links} />
+            </div>
+            {asString(p.note) ? (
+              <p className={`${site.muted} opacity-80`}>{asString(p.note)}</p>
+            ) : null}
           </div>
-          {asString(p.note) ? (
-            <p className="text-sm opacity-70">{asString(p.note)}</p>
-          ) : null}
         </Shell>
       );
     }
@@ -710,19 +723,19 @@ export function SectionRenderer({
     case "tournament-card":
       return (
         <Shell section={section} className={className}>
-          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+          <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-muted)]">
             {asString(p.status, "Tournament")} · {asString(p.game)}
           </p>
-          <h3 className="mt-1 text-xl font-semibold text-zinc-900">
+          <h3 className={`mt-1 ${site.h3} text-xl`}>
             {heading || asString(p.name, "Tournament")}
           </h3>
           {asString(p.prizePool) ? (
-            <p className="mt-2 text-sm text-zinc-600">
+            <p className={`mt-2 ${site.muted}`}>
               Prize pool: {asString(p.prizePool)}
             </p>
           ) : null}
           {description ? (
-            <p className="mt-2 text-sm text-zinc-600">{description}</p>
+            <p className={`mt-2 ${site.muted}`}>{description}</p>
           ) : null}
         </Shell>
       );
@@ -730,14 +743,14 @@ export function SectionRenderer({
     case "match-card":
       return (
         <Shell section={section} className={className}>
-          <p className="text-xs uppercase tracking-wide text-zinc-500">
+          <p className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
             {asString(p.game)} · {asString(p.status, "Match")}
           </p>
-          <h3 className="mt-1 text-lg font-semibold text-zinc-900">
+          <h3 className="mt-1 text-lg font-semibold text-[var(--color-text)]">
             {heading || asString(p.title, "Match")}
           </h3>
           {asString(p.startsAt) ? (
-            <p className="mt-1 text-sm text-zinc-600">{asString(p.startsAt)}</p>
+            <p className="mt-1 text-sm text-[var(--color-muted)]">{asString(p.startsAt)}</p>
           ) : null}
         </Shell>
       );
@@ -747,22 +760,22 @@ export function SectionRenderer({
         <Shell section={section} className={className}>
           <div className="flex items-start justify-between gap-2">
             <div>
-              <h3 className="text-lg font-semibold text-zinc-900">
+              <h3 className="text-lg font-semibold text-[var(--color-text)]">
                 {heading || asString(p.name, "Team")}
               </h3>
-              <p className="text-sm text-zinc-600">{asString(p.game)}</p>
+              <p className="text-sm text-[var(--color-muted)]">{asString(p.game)}</p>
             </div>
             {asString(p.tag) ? (
-              <span className="rounded bg-zinc-900 px-2 py-0.5 text-xs font-medium text-white">
+              <span className="rounded bg-[var(--color-primary)] px-2 py-0.5 text-xs font-medium text-white">
                 {asString(p.tag)}
               </span>
             ) : null}
           </div>
           {asString(p.record) ? (
-            <p className="mt-2 text-sm text-zinc-500">Record: {asString(p.record)}</p>
+            <p className="mt-2 text-sm text-[var(--color-muted)]">Record: {asString(p.record)}</p>
           ) : null}
           {description ? (
-            <p className="mt-2 text-sm text-zinc-600">{description}</p>
+            <p className={`mt-2 ${site.muted}`}>{description}</p>
           ) : null}
         </Shell>
       );
@@ -774,18 +787,18 @@ export function SectionRenderer({
             <ImagePlaceholder
               src={imageUrl}
               alt={heading}
-              className="mb-3 aspect-square w-24 rounded-full bg-zinc-200 object-cover"
+              className="mb-3 aspect-square w-24 rounded-full bg-[var(--color-surface)] object-cover"
             />
           ) : null}
-          <h3 className="text-lg font-semibold text-zinc-900">
+          <h3 className="text-lg font-semibold text-[var(--color-text)]">
             {heading || asString(p.name, "Player")}
           </h3>
-          <p className="text-sm text-zinc-600">
+          <p className="text-sm text-[var(--color-muted)]">
             {asString(p.role)}
             {asString(p.gamertag) ? ` · ${asString(p.gamertag)}` : ""}
           </p>
           {description ? (
-            <p className="mt-2 text-sm text-zinc-600">{description}</p>
+            <p className={`mt-2 ${site.muted}`}>{description}</p>
           ) : null}
         </Shell>
       );
@@ -797,15 +810,15 @@ export function SectionRenderer({
             heading={heading || asString(p.teamName, "Roster")}
             description={description}
           />
-          <ul className="divide-y divide-zinc-200 rounded-md border border-zinc-200">
+          <ul className="divide-y divide-zinc-200 rounded-md border border-[var(--color-border)]">
             {asArray(p.items).map((item, i) => {
               const row = item as Record<string, unknown>;
               return (
                 <li key={i} className="flex items-center justify-between px-4 py-3 text-sm">
-                  <span className="font-medium text-zinc-900">
+                  <span className="font-medium text-[var(--color-text)]">
                     {asString(row.name)}
                   </span>
-                  <span className="text-zinc-500">
+                  <span className="text-[var(--color-muted)]">
                     {asString(row.role)}
                     {asString(row.gamertag) ? ` · ${asString(row.gamertag)}` : ""}
                   </span>
@@ -820,7 +833,7 @@ export function SectionRenderer({
       return (
         <Shell section={section} className={className}>
           <HeadingBlock heading={heading || "Leaderboard"} description={description} />
-          <ol className="divide-y divide-zinc-200 rounded-md border border-zinc-200">
+          <ol className="divide-y divide-zinc-200 rounded-md border border-[var(--color-border)]">
             {asArray(p.items).map((item, i) => {
               const row = item as Record<string, unknown>;
               return (
@@ -828,10 +841,10 @@ export function SectionRenderer({
                   <span className="w-8 font-mono text-zinc-400">
                     #{asString(row.rank, String(i + 1))}
                   </span>
-                  <span className="flex-1 font-medium text-zinc-900">
+                  <span className="flex-1 font-medium text-[var(--color-text)]">
                     {asString(row.name)}
                   </span>
-                  <span className="font-mono text-zinc-600">
+                  <span className="font-mono text-[var(--color-muted)]">
                     {asString(row.score)}
                   </span>
                 </li>
@@ -857,15 +870,15 @@ export function SectionRenderer({
               return (
                 <li
                   key={i}
-                  className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-zinc-200 px-4 py-3"
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-[var(--color-border)] px-4 py-3"
                 >
                   <div>
-                    <p className="font-medium text-zinc-900">
+                    <p className="font-medium text-[var(--color-text)]">
                       {asString(row.title ?? row.heading, "Match")}
                     </p>
-                    <p className="text-sm text-zinc-500">{asString(row.game)}</p>
+                    <p className="text-sm text-[var(--color-muted)]">{asString(row.game)}</p>
                   </div>
-                  <span className="text-sm text-zinc-600">
+                  <span className="text-sm text-[var(--color-muted)]">
                     {asString(row.startsAt)}
                   </span>
                 </li>
@@ -886,12 +899,12 @@ export function SectionRenderer({
               return (
                 <div
                   key={i}
-                  className="rounded-md border border-zinc-200 bg-zinc-50 p-3 text-sm"
+                  className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-sm"
                 >
                   <p className="text-xs uppercase text-zinc-400">
                     {asString(row.label, `Round ${i + 1}`)}
                   </p>
-                  <p className="mt-1 font-medium text-zinc-900">
+                  <p className="mt-1 font-medium text-[var(--color-text)]">
                     {asString(row.teams ?? row.title, "TBD")}
                   </p>
                 </div>
@@ -911,12 +924,12 @@ export function SectionRenderer({
               return (
                 <li
                   key={i}
-                  className="flex items-center justify-between rounded-md border border-zinc-200 px-4 py-3 text-sm"
+                  className="flex items-center justify-between rounded-md border border-[var(--color-border)] px-4 py-3 text-sm"
                 >
-                  <span className="font-medium text-zinc-900">
+                  <span className="font-medium text-[var(--color-text)]">
                     {asString(row.title)}
                   </span>
-                  <span className="font-mono text-zinc-600">
+                  <span className="font-mono text-[var(--color-muted)]">
                     {asString(row.score)}
                   </span>
                 </li>
@@ -936,12 +949,12 @@ export function SectionRenderer({
               return (
                 <div
                   key={i}
-                  className="rounded-md border border-zinc-200 bg-zinc-50 p-4 text-center"
+                  className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-center"
                 >
-                  <p className="text-2xl font-semibold text-zinc-900">
+                  <p className="text-2xl font-semibold text-[var(--color-text)]">
                     {asString(row.value)}
                   </p>
-                  <p className="mt-1 text-xs uppercase tracking-wide text-zinc-500">
+                  <p className="mt-1 text-xs uppercase tracking-wide text-[var(--color-muted)]">
                     {asString(row.label)}
                   </p>
                 </div>
@@ -959,7 +972,7 @@ export function SectionRenderer({
             description={description}
           />
           {asString(p.platform) ? (
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-[var(--color-muted)]">
               Platform: {asString(p.platform)}
             </p>
           ) : null}
@@ -971,7 +984,7 @@ export function SectionRenderer({
         <Shell section={section} className={className}>
           <HeadingBlock heading={heading || "Prize pool"} description={description} />
           {asString(p.amount) ? (
-            <p className="text-3xl font-semibold text-zinc-900">
+            <p className="text-3xl font-semibold text-[var(--color-text)]">
               {asString(p.amount)}
             </p>
           ) : null}
@@ -1015,9 +1028,9 @@ export function SectionRenderer({
               return (
                 <div
                   key={i}
-                  className="min-w-32 rounded-md border border-zinc-200 bg-white px-4 py-6 text-center"
+                  className="min-w-32 rounded-md border border-[var(--color-border)] bg-white px-4 py-6 text-center"
                 >
-                  <p className="font-semibold text-zinc-900">
+                  <p className="font-semibold text-[var(--color-text)]">
                     {asString(row.name)}
                   </p>
                   {asString(row.tier) ? (
@@ -1073,7 +1086,7 @@ export function SectionRenderer({
         <Shell section={section} className={className}>
           <HeadingBlock heading={heading || "Stream"} description={description} />
           {channel ? (
-            <p className="mb-2 text-sm text-zinc-500">Channel: {channel}</p>
+            <p className="mb-2 text-sm text-[var(--color-muted)]">Channel: {channel}</p>
           ) : null}
           {iframeSrc ? (
             <div className="aspect-video overflow-hidden rounded-md bg-zinc-900">
@@ -1086,7 +1099,7 @@ export function SectionRenderer({
               />
             </div>
           ) : (
-            <div className="flex aspect-video items-center justify-center rounded-md bg-zinc-200 text-sm text-zinc-500">
+            <div className="flex aspect-video items-center justify-center rounded-md bg-[var(--color-surface)] text-sm text-[var(--color-muted)]">
               Add stream channel or video ID
             </div>
           )}
@@ -1103,9 +1116,9 @@ export function SectionRenderer({
           <ImagePlaceholder
             src={imageUrl}
             alt={asString(p.alt, asString(p.game, "Game"))}
-            className="h-24 w-24 rounded-md bg-zinc-200 object-contain"
+            className="h-24 w-24 rounded-md bg-[var(--color-surface)] object-contain"
           />
-          <p className="font-medium text-zinc-900">
+          <p className="font-medium text-[var(--color-text)]">
             {heading || asString(p.game, "Game")}
           </p>
         </Shell>
@@ -1129,16 +1142,16 @@ export function SectionRenderer({
       return (
         <Shell
           section={section}
-          className={`rounded-md border border-dashed border-zinc-300 bg-zinc-50 p-4 ${className ?? ""}`}
+          className={`rounded-md border border-dashed border-zinc-300 bg-[var(--color-surface)] p-4 ${className ?? ""}`}
         >
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-400">
             {section.type}
           </p>
           {heading ? (
-            <h3 className="mt-2 text-lg font-semibold text-zinc-900">{heading}</h3>
+            <h3 className="mt-2 text-lg font-semibold text-[var(--color-text)]">{heading}</h3>
           ) : null}
           {description ? (
-            <p className="mt-1 text-sm text-zinc-600">{description}</p>
+            <p className="mt-1 text-sm text-[var(--color-muted)]">{description}</p>
           ) : null}
         </Shell>
       );

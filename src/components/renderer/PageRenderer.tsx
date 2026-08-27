@@ -47,7 +47,7 @@ export function PageRenderer({
     : undefined;
 
   return (
-    <div className={className ?? "w-full"} style={themeStyle}>
+    <div className={`site-theme min-h-full w-full ${className ?? ""}`} style={themeStyle}>
       {sections.map((section) => (
         <SectionRenderer
           key={section.id}

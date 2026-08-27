@@ -42,3 +42,14 @@ body {
   background-color: #71717a;
 }
 
+/* Themed public / template preview pages */
+.site-theme {
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  font-family: var(--font-family, system-ui, sans-serif);
+}
+
+.site-theme a {
+  transition: color 0.15s ease, opacity 0.15s ease;
+}
+

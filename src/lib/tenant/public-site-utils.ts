@@ -1,5 +1,9 @@
 import type { CSSProperties } from "react";
 import type { Metadata } from "next";
+import {
+  normalizeThemeTokens as normalizeTokens,
+  themeTokensToCssVars as tokensToCssVars,
+} from "@/templates/tokens/css-vars";
 
 export type PublicNavItem = { label: string; href: string };
 
@@ -19,10 +23,17 @@ export type PublicSiteBundle = {
 };
 
 const defaultThemeTokens: Record<string, string> = {
-  primary: "#18181b",
-  background: "#ffffff",
-  text: "#18181b",
-  fontFamily: "system-ui, sans-serif",
+  primary: "#6366f1",
+  secondary: "#1e1b4b",
+  accent: "#22d3ee",
+  background: "#0f172a",
+  surface: "#1e293b",
+  text: "#f8fafc",
+  muted: "#94a3b8",
+  border: "rgba(148, 163, 184, 0.2)",
+  fontHeading: "Orbitron, system-ui, sans-serif",
+  fontBody: "Inter, system-ui, sans-serif",
+  fontFamily: "Inter, system-ui, sans-serif",
 };
 
 function asStringRecord(raw: unknown): Record<string, unknown> {
@@ -34,12 +45,10 @@ export function normalizeThemeTokens(
   raw: unknown,
 ): Record<string, unknown> {
   const current = asStringRecord(raw);
-  return {
+  return normalizeTokens({
     ...defaultThemeTokens,
-    ...Object.fromEntries(
-      Object.entries(current).filter(([, v]) => typeof v === "string"),
-    ),
-  };
+    ...current,
+  }) as unknown as Record<string, unknown>;
 }
 
 export function parseNavigationItems(raw: unknown): PublicNavItem[] {
@@ -60,20 +69,7 @@ export function parseNavigationItems(raw: unknown): PublicNavItem[] {
 export function themeTokensToCssVars(
   tokens?: Record<string, unknown> | null,
 ): CSSProperties {
-  const t = normalizeThemeTokens(tokens ?? {});
-  const primary = String(t.primary ?? defaultThemeTokens.primary);
-  const bg = String(t.background ?? defaultThemeTokens.background);
-  const text = String(t.text ?? defaultThemeTokens.text);
-  const font = String(t.fontFamily ?? defaultThemeTokens.fontFamily);
-  return {
-    ["--color-primary" as string]: primary,
-    ["--color-bg" as string]: bg,
-    ["--color-text" as string]: text,
-    ["--font-family" as string]: font,
-    backgroundColor: bg,
-    color: text,
-    fontFamily: font,
-  };
+  return tokensToCssVars(tokens);
 }
 
 type PageSeo = {
