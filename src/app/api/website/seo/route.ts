@@ -18,6 +18,7 @@ const seoSchema = z.object({
 });
 
 const seoSelect = {
+  name: true,
   seoTitle: true,
   seoDescription: true,
   faviconUrl: true,

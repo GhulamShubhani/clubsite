@@ -7,6 +7,7 @@ import type { PageContent } from "@/lib/page-schema";
 import { PageRenderer } from "@/components/renderer/PageRenderer";
 import { SiteNavbar } from "@/components/renderer/SiteNavbar";
 import { TrackPageView } from "@/components/analytics/TrackPageView";
+import { StructuredData } from "@/components/seo/StructuredData";
 import {
   buildPublicMetadata,
   getPublicSiteBundle,
@@ -57,6 +58,7 @@ export default async function PublicCatchAllPage({ params }: Props) {
   }
 
   const path = pathFromSegments(segments);
+  const siteUrl = `${h.get("x-forwarded-proto") ?? "https"}://${host ?? ""}`;
 
   const [bundle, published] = await Promise.all([
     getPublicSiteBundle(resolution.tenant.id),
@@ -75,6 +77,16 @@ export default async function PublicCatchAllPage({ params }: Props) {
 
   return (
     <main className="min-h-full w-full">
+      {bundle ? (
+        <StructuredData
+          name={bundle.website.name}
+          description={bundle.website.seoDescription}
+          url={bundle.website.canonicalUrl ?? siteUrl}
+          pageTitle={published.page.seoTitle ?? published.page.title}
+          pagePath={path}
+          logoUrl={bundle.website.faviconUrl}
+        />
+      ) : null}
       <TrackPageView path={path} />
       {prependNav && bundle ? (
         <SiteNavbar brand={bundle.website.name} items={bundle.navigationItems} />

@@ -97,6 +97,12 @@ export function buildPublicMetadata(
   return {
     title,
     description,
+    keywords: [
+      bundle.website.name,
+      "gaming club",
+      "esports",
+      "gaming community",
+    ],
     robots: bundle.website.robotsIndex ? undefined : { index: false, follow: false },
     alternates: bundle.website.canonicalUrl
       ? { canonical: bundle.website.canonicalUrl }
@@ -107,7 +113,15 @@ export function buildPublicMetadata(
     openGraph: {
       title,
       description,
+      siteName: bundle.website.name,
+      type: "website",
       images: ogImages,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: bundle.website.ogImageUrl ? [bundle.website.ogImageUrl] : undefined,
     },
   };
 }

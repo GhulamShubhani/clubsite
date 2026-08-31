@@ -6,16 +6,30 @@ import { NotFoundError } from "@/lib/errors";
 import { assertSameTenant, requireTenantAccess } from "@/lib/tenant/access";
 
 const defaultTokens = {
-  primary: "#18181b",
-  background: "#ffffff",
-  text: "#18181b",
-  fontFamily: "system-ui, sans-serif",
+  primary: "#6366f1",
+  secondary: "#1e1b4b",
+  accent: "#22d3ee",
+  background: "#0f172a",
+  surface: "#1e293b",
+  text: "#f8fafc",
+  muted: "#94a3b8",
+  border: "rgba(148, 163, 184, 0.2)",
+  fontHeading: "Orbitron, system-ui, sans-serif",
+  fontBody: "Inter, system-ui, sans-serif",
+  fontFamily: "Inter, system-ui, sans-serif",
 };
 
 const tokensSchema = z.object({
-  primary: z.string().min(1).max(40).optional(),
-  background: z.string().min(1).max(40).optional(),
-  text: z.string().min(1).max(40).optional(),
+  primary: z.string().min(1).max(80).optional(),
+  secondary: z.string().min(1).max(80).optional(),
+  accent: z.string().min(1).max(80).optional(),
+  background: z.string().min(1).max(80).optional(),
+  surface: z.string().min(1).max(80).optional(),
+  text: z.string().min(1).max(80).optional(),
+  muted: z.string().min(1).max(80).optional(),
+  border: z.string().min(1).max(120).optional(),
+  fontHeading: z.string().min(1).max(120).optional(),
+  fontBody: z.string().min(1).max(120).optional(),
   fontFamily: z.string().min(1).max(120).optional(),
 });
 

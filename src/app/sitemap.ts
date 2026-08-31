@@ -22,6 +22,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ];
   }
 
+  const website = await prisma.website.findUnique({
+    where: { tenantId: resolution.tenant.id },
+    select: { robotsIndex: true },
+  });
+  if (website && !website.robotsIndex) {
+    return [];
+  }
+
   const pages = await prisma.page.findMany({
     where: {
       tenantId: resolution.tenant.id,
@@ -30,8 +38,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     select: { path: true, updatedAt: true },
   });
 
-  return pages.map((page) => ({
-    url: `${protocol}://${host}${page.path === "/" ? "" : page.path}`,
-    lastModified: page.updatedAt,
-  }));
+  return pages.map((page) => {
+    const isHome = page.path === "/";
+    return {
+      url: `${protocol}://${host}${isHome ? "" : page.path}`,
+      lastModified: page.updatedAt,
+      changeFrequency: isHome ? "daily" : "weekly",
+      priority: isHome ? 1 : 0.7,
+    };
+  });
 }
