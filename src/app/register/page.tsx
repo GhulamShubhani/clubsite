@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PasswordField } from "@/components/ui/PasswordField";
@@ -14,6 +14,26 @@ function slugify(value: string) {
     .slice(0, 63);
 }
 
+function buildSuggestions(clubName: string, currentSlug: string): string[] {
+  const base = slugify(clubName);
+  if (!base) return ["my-club", "gaming-club", "esports-hq", "play-zone"];
+
+  const candidates = [
+    base,
+    `${base}-club`,
+    `${base}-gg`,
+    `${base}-esports`,
+    `${base}-hq`,
+    `${base}-official`,
+    `team-${base}`,
+    `${base}-gaming`,
+  ];
+
+  return [...new Set(candidates)]
+    .filter((s) => s.length >= 2 && s !== currentSlug)
+    .slice(0, 6);
+}
+
 export default function RegisterPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -21,32 +41,76 @@ export default function RegisterPage() {
   const [clubName, setClubName] = useState("");
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
-  const [slugStatus, setSlugStatus] = useState<string | null>(null);
+  const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
+  const [slugMessage, setSlugMessage] = useState<string | null>(null);
+  const [apiSuggestions, setApiSuggestions] = useState<string[]>([]);
 
-  const suggested = useMemo(() => slugify(clubName), [clubName]);
+  const localSuggestions = useMemo(
+    () => buildSuggestions(clubName, slug),
+    [clubName, slug],
+  );
 
-  async function checkSlug(value: string) {
+  const suggestions = useMemo(() => {
+    const merged = [...apiSuggestions, ...localSuggestions];
+    return [...new Set(merged)].filter((s) => s !== slug).slice(0, 6);
+  }, [apiSuggestions, localSuggestions, slug]);
+
+  const checkSlug = useCallback(async (value: string) => {
     if (!value || value.length < 2) {
-      setSlugStatus(null);
+      setSlugAvailable(null);
+      setSlugMessage(null);
+      setApiSuggestions([]);
       return;
     }
+
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)) {
+      setSlugAvailable(false);
+      setSlugMessage("Use lowercase letters, numbers, and hyphens only");
+      setApiSuggestions([]);
+      return;
+    }
+
     try {
       const res = await fetch(`/api/slug/check?slug=${encodeURIComponent(value)}`);
       const data = await res.json();
       if (!res.ok) {
-        setSlugStatus("Invalid slug format");
+        setSlugAvailable(null);
+        setSlugMessage(
+          res.status === 429
+            ? "Checking too fast — try again in a moment"
+            : (data.error ?? "Could not check slug"),
+        );
+        setApiSuggestions([]);
         return;
       }
       if (data.available) {
-        setSlugStatus("Available");
+        setSlugAvailable(true);
+        setSlugMessage("Available");
+        setApiSuggestions([]);
       } else {
-        setSlugStatus(
-          `Taken. Try: ${(data.suggestions as string[])?.slice(0, 3).join(", ") || "another name"}`,
-        );
+        setSlugAvailable(false);
+        setSlugMessage("Already taken — try a suggestion below");
+        setApiSuggestions((data.suggestions as string[]) ?? []);
       }
     } catch {
-      setSlugStatus(null);
+      setSlugAvailable(null);
+      setSlugMessage(null);
+      setApiSuggestions([]);
     }
+  }, []);
+
+  useEffect(() => {
+    if (!slug) return;
+    const timer = setTimeout(() => {
+      void checkSlug(slug);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [slug, checkSlug]);
+
+  function applySuggestion(value: string) {
+    setSlugTouched(true);
+    setSlug(value);
+    void checkSlug(value);
   }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -120,9 +184,7 @@ export default function RegisterPage() {
             const value = e.target.value;
             setClubName(value);
             if (!slugTouched) {
-              const next = slugify(value);
-              setSlug(next);
-              void checkSlug(next);
+              setSlug(slugify(value));
             }
           }}
           className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400"
@@ -133,24 +195,63 @@ export default function RegisterPage() {
             required
             pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
             title="Lowercase letters, numbers, and hyphens only"
-            placeholder="Website slug (e.g. abc-gaming)"
+            placeholder="Website slug (e.g. cricket-club)"
             value={slug}
             onChange={(e) => {
               setSlugTouched(true);
-              const value = slugify(e.target.value);
-              setSlug(value);
-              void checkSlug(value);
+              setSlug(slugify(e.target.value));
             }}
-            className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 font-mono text-sm text-zinc-900 placeholder:text-zinc-400"
+            className={`w-full rounded-md border bg-white px-3 py-2 font-mono text-sm text-zinc-900 placeholder:text-zinc-400 ${
+              slugAvailable === true
+                ? "border-emerald-400"
+                : slugAvailable === false
+                  ? "border-rose-400"
+                  : "border-zinc-300"
+            }`}
           />
           <p className="mt-1 text-xs text-zinc-500">
-            Your website link: /club/{slug || suggested || "your-name"}
-            {slugStatus ? ` · ${slugStatus}` : ""}
+            Your website link:{" "}
+            <span className="font-medium text-zinc-700">
+              /club/{slug || "your-name"}
+            </span>
           </p>
-          <p className="mt-1 text-xs text-zinc-400">
-            Pick a short, easy name (letters and numbers). This becomes part of
-            your website address.
-          </p>
+          {slugMessage ? (
+            <p
+              className={`mt-1 text-xs ${
+                slugAvailable === true
+                  ? "text-emerald-600"
+                  : slugAvailable === false
+                    ? "text-rose-600"
+                    : "text-zinc-500"
+              }`}
+            >
+              {slugMessage}
+            </p>
+          ) : (
+            <p className="mt-1 text-xs text-zinc-400">
+              Pick a short name with letters and numbers. This becomes your website address.
+            </p>
+          )}
+
+          {suggestions.length > 0 ? (
+            <div className="mt-3">
+              <p className="mb-2 text-xs font-medium text-zinc-600">
+                Suggestions — click to use
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {suggestions.map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() => applySuggestion(item)}
+                    className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1.5 font-mono text-xs text-zinc-700 transition hover:border-zinc-900 hover:bg-zinc-900 hover:text-white"
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button

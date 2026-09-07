@@ -13,7 +13,16 @@ const querySchema = z.object({
 });
 
 function suggestAlternatives(slug: string): string[] {
-  return [`${slug}-club`, `${slug}-esports`, `${slug}-gg`, `${slug}-hq`];
+  const base = slug.replace(/-(club|esports|gg|hq|official|gaming)$/i, "") || slug;
+  return [
+    `${base}-club`,
+    `${base}-esports`,
+    `${base}-gg`,
+    `${base}-hq`,
+    `${base}-gaming`,
+    `team-${base}`,
+    `${base}-official`,
+  ].filter((s) => s !== slug && s.length <= 63);
 }
 
 function clientKey(request: Request) {

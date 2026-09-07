@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { requireTenantAccess } from "@/lib/tenant/access";
 import { UnauthorizedError } from "@/lib/errors";
+import { ClubManagementNav } from "@/components/admin/ClubManagementNav";
 import { LogoutButton } from "@/components/admin/LogoutButton";
 import { getClubPublicUrl } from "@/lib/tenant/public-url";
 
@@ -19,19 +20,6 @@ const NAV = [
   { href: "/admin/analytics", label: "Analytics" },
   { href: "/admin/domains", label: "Domains" },
   { href: "/admin/account", label: "Account" },
-] as const;
-
-const CLUB_MANAGEMENT_NAV = [
-  { href: "/admin/teams", label: "Teams" },
-  { href: "/admin/players", label: "Players" },
-  { href: "/admin/tournaments", label: "Tournaments" },
-  { href: "/admin/matches", label: "Matches" },
-  { href: "/admin/events", label: "Events" },
-  { href: "/admin/sponsors", label: "Sponsors" },
-  { href: "/admin/streams", label: "Streams" },
-  { href: "/admin/leaderboards", label: "Leaderboards" },
-  { href: "/admin/subscription", label: "Subscription" },
-  { href: "/admin/members", label: "Team members" },
 ] as const;
 
 export default async function AdminLayout({
@@ -96,27 +84,8 @@ export default async function AdminLayout({
                 </Link>
               </li>
             ))}
-            <li className="pt-3">
-              <details open className="group">
-                <summary className="flex cursor-pointer list-none items-center justify-between rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-wider text-zinc-500 hover:bg-zinc-200 hover:text-zinc-800 [&::-webkit-details-marker]:hidden">
-                  <span>Club management</span>
-                  <span className="text-base leading-none transition-transform group-open:rotate-180">
-                   ⌄
-                  </span>
-                </summary>
-                <ul className="mt-1 space-y-0.5 border-l border-zinc-300 pl-2">
-                  {CLUB_MANAGEMENT_NAV.map((item) => (
-                    <li key={`${item.label}-${item.href}`}>
-                      <Link
-                        href={item.href}
-                        className="block rounded-md px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-200 hover:text-zinc-900"
-                      >
-                        {item.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </details>
+            <li>
+              <ClubManagementNav />
             </li>
           </ul>
         </nav>
