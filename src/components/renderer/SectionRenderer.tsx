@@ -1,6 +1,8 @@
 import type { CSSProperties, ReactNode } from "react";
 import type { PageSection } from "@/lib/page-schema";
-import { looksLikeHtml, sanitizeHtml } from "@/lib/security/sanitize";
+import { stripHtml } from "@/lib/security/sanitize";
+import { SiteLink } from "@/components/public/SiteLink";
+import { HtmlContent } from "./HtmlContent";
 import { site } from "./site-classes";
 import { ContactForm } from "./ContactForm";
 import { EventCountdown } from "./EventCountdown";
@@ -76,14 +78,12 @@ function HeadingBlock({
   return (
     <div className="mb-4">
       {heading ? (
-        <Tag className={site.h2}>
-          {heading}
-        </Tag>
+        <HtmlContent value={heading} as={Tag} className={site.h2} />
       ) : null}
       {description ? (
-        <RichText
+        <HtmlContent
           value={description}
-          className={`mt-2 ${site.body}`}
+          className={`mt-2 ${site.body} [&_p]:m-0`}
           as="div"
         />
       ) : null}
@@ -109,13 +109,13 @@ function Buttons({
   return (
     <div className="mt-4 flex flex-wrap gap-3">
       {items.map((btn, i) => (
-        <a
+        <SiteLink
           key={`${btn.label}-${i}`}
           href={asString(btn.href, "#")}
           className={site.btn}
         >
           {asString(btn.label, "Button")}
-        </a>
+        </SiteLink>
       ))}
     </div>
   );
@@ -130,13 +130,13 @@ function LinkList({
   return (
     <nav className="flex flex-wrap gap-4 text-sm">
       {links.map((link, i) => (
-        <a
+        <SiteLink
           key={`${link.label}-${i}`}
           href={asString(link.href, "#")}
           className={site.link}
         >
           {asString(link.label, "Link")}
-        </a>
+        </SiteLink>
       ))}
     </nav>
   );
@@ -205,16 +205,7 @@ function RichText({
   className?: string;
   as?: "div" | "p" | "span";
 }) {
-  if (!value) return null;
-  if (looksLikeHtml(value)) {
-    return (
-      <Tag
-        className={className}
-        dangerouslySetInnerHTML={{ __html: sanitizeHtml(value) }}
-      />
-    );
-  }
-  return <Tag className={className}>{value}</Tag>;
+  return <HtmlContent value={value} className={className} as={Tag} />;
 }
 
 function HeroCopy({
@@ -235,18 +226,18 @@ function HeroCopy({
   const alignClass = align === "left" ? "text-left" : "text-center";
   return (
     <div className={alignClass}>
-      <h1
+      <HtmlContent
+        value={heading || "Hero"}
+        as="h1"
         className={
           headingClassName ??
           "text-4xl font-semibold tracking-tight sm:text-5xl"
         }
-      >
-        {heading || "Hero"}
-      </h1>
+      />
       {description ? (
-        <RichText
+        <HtmlContent
           value={description}
-          className="mt-4 text-lg opacity-80"
+          className="mt-4 text-lg opacity-80 [&_p]:m-0"
           as="div"
         />
       ) : null}
@@ -424,7 +415,7 @@ export function SectionRenderer({
           <div className={isSplit ? "min-h-80" : undefined}>
             <ImagePlaceholder
               src={imageUrl}
-              alt={heading}
+              alt={stripHtml(heading)}
               className={
                 isSplit
                   ? "h-full min-h-80 w-full object-cover"
@@ -469,7 +460,7 @@ export function SectionRenderer({
           </div>
           {imageUrl ? (
             <div className="mx-auto mt-8 max-w-4xl">
-              <ImagePlaceholder src={imageUrl} alt={heading} />
+              <ImagePlaceholder src={imageUrl} alt={stripHtml(heading)} />
             </div>
           ) : null}
         </Shell>
@@ -485,9 +476,11 @@ export function SectionRenderer({
         | "h3";
       return (
         <Shell section={section} className={className}>
-          <Tag className={`${site.h2} text-2xl sm:text-3xl`}>
-            {text}
-          </Tag>
+          <HtmlContent
+            value={text}
+            as={Tag}
+            className={`${site.h2} text-2xl sm:text-3xl`}
+          />
         </Shell>
       );
     }
@@ -528,7 +521,7 @@ export function SectionRenderer({
           {videoUrl ? (
             <div className="aspect-video overflow-hidden rounded-md bg-zinc-900">
               <iframe
-                title={heading || "Video"}
+                title={stripHtml(heading) || "Video"}
                 src={videoUrl}
                 className="h-full w-full"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -563,13 +556,21 @@ export function SectionRenderer({
             {imageUrl ? (
               <ImagePlaceholder
                 src={imageUrl}
-                alt={heading}
+                alt={stripHtml(heading)}
                 className={`mb-3 aspect-video w-full rounded-lg object-cover ${site.imageBg}`}
               />
             ) : null}
-            <h3 className={site.h3}>{heading || "Card"}</h3>
+            <HtmlContent
+              value={heading || "Card"}
+              as="h3"
+              className={site.h3}
+            />
             {description ? (
-              <p className={`mt-2 ${site.muted}`}>{description}</p>
+              <HtmlContent
+                value={description}
+                className={`mt-2 ${site.muted} [&_p]:m-0`}
+                as="div"
+              />
             ) : null}
             <Buttons buttons={p.buttons} />
           </div>
@@ -726,16 +727,22 @@ export function SectionRenderer({
           <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-muted)]">
             {asString(p.status, "Tournament")} · {asString(p.game)}
           </p>
-          <h3 className={`mt-1 ${site.h3} text-xl`}>
-            {heading || asString(p.name, "Tournament")}
-          </h3>
+          <HtmlContent
+            value={heading || asString(p.name, "Tournament")}
+            as="h3"
+            className={`mt-1 ${site.h3} text-xl`}
+          />
           {asString(p.prizePool) ? (
             <p className={`mt-2 ${site.muted}`}>
               Prize pool: {asString(p.prizePool)}
             </p>
           ) : null}
           {description ? (
-            <p className={`mt-2 ${site.muted}`}>{description}</p>
+            <HtmlContent
+              value={description}
+              className={`mt-2 ${site.muted} [&_p]:m-0`}
+              as="div"
+            />
           ) : null}
         </Shell>
       );
@@ -746,9 +753,11 @@ export function SectionRenderer({
           <p className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
             {asString(p.game)} · {asString(p.status, "Match")}
           </p>
-          <h3 className="mt-1 text-lg font-semibold text-[var(--color-text)]">
-            {heading || asString(p.title, "Match")}
-          </h3>
+          <HtmlContent
+            value={heading || asString(p.title, "Match")}
+            as="h3"
+            className="mt-1 text-lg font-semibold text-[var(--color-text)]"
+          />
           {asString(p.startsAt) ? (
             <p className="mt-1 text-sm text-[var(--color-muted)]">{asString(p.startsAt)}</p>
           ) : null}
@@ -760,9 +769,11 @@ export function SectionRenderer({
         <Shell section={section} className={className}>
           <div className="flex items-start justify-between gap-2">
             <div>
-              <h3 className="text-lg font-semibold text-[var(--color-text)]">
-                {heading || asString(p.name, "Team")}
-              </h3>
+              <HtmlContent
+                value={heading || asString(p.name, "Team")}
+                as="h3"
+                className="text-lg font-semibold text-[var(--color-text)]"
+              />
               <p className="text-sm text-[var(--color-muted)]">{asString(p.game)}</p>
             </div>
             {asString(p.tag) ? (
@@ -775,7 +786,11 @@ export function SectionRenderer({
             <p className="mt-2 text-sm text-[var(--color-muted)]">Record: {asString(p.record)}</p>
           ) : null}
           {description ? (
-            <p className={`mt-2 ${site.muted}`}>{description}</p>
+            <HtmlContent
+              value={description}
+              className={`mt-2 ${site.muted} [&_p]:m-0`}
+              as="div"
+            />
           ) : null}
         </Shell>
       );
@@ -786,19 +801,25 @@ export function SectionRenderer({
           {imageUrl ? (
             <ImagePlaceholder
               src={imageUrl}
-              alt={heading}
+              alt={stripHtml(heading)}
               className="mb-3 aspect-square w-24 rounded-full bg-[var(--color-surface)] object-cover"
             />
           ) : null}
-          <h3 className="text-lg font-semibold text-[var(--color-text)]">
-            {heading || asString(p.name, "Player")}
-          </h3>
+          <HtmlContent
+            value={heading || asString(p.name, "Player")}
+            as="h3"
+            className="text-lg font-semibold text-[var(--color-text)]"
+          />
           <p className="text-sm text-[var(--color-muted)]">
             {asString(p.role)}
             {asString(p.gamertag) ? ` · ${asString(p.gamertag)}` : ""}
           </p>
           {description ? (
-            <p className={`mt-2 ${site.muted}`}>{description}</p>
+            <HtmlContent
+              value={description}
+              className={`mt-2 ${site.muted} [&_p]:m-0`}
+              as="div"
+            />
           ) : null}
         </Shell>
       );
@@ -1091,7 +1112,7 @@ export function SectionRenderer({
           {iframeSrc ? (
             <div className="aspect-video overflow-hidden rounded-md bg-zinc-900">
               <iframe
-                title={heading || "Stream"}
+                title={stripHtml(heading) || "Stream"}
                 src={iframeSrc}
                 className="h-full w-full"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -1118,9 +1139,11 @@ export function SectionRenderer({
             alt={asString(p.alt, asString(p.game, "Game"))}
             className="h-24 w-24 rounded-md bg-[var(--color-surface)] object-contain"
           />
-          <p className="font-medium text-[var(--color-text)]">
-            {heading || asString(p.game, "Game")}
-          </p>
+          <HtmlContent
+            value={heading || asString(p.game, "Game")}
+            as="p"
+            className="font-medium text-[var(--color-text)]"
+          />
         </Shell>
       );
 
@@ -1148,10 +1171,18 @@ export function SectionRenderer({
             {section.type}
           </p>
           {heading ? (
-            <h3 className="mt-2 text-lg font-semibold text-[var(--color-text)]">{heading}</h3>
+            <HtmlContent
+              value={heading}
+              as="h3"
+              className="mt-2 text-lg font-semibold text-[var(--color-text)]"
+            />
           ) : null}
           {description ? (
-            <p className="mt-1 text-sm text-[var(--color-muted)]">{description}</p>
+            <HtmlContent
+              value={description}
+              className="mt-1 text-sm text-[var(--color-muted)] [&_p]:m-0"
+              as="div"
+            />
           ) : null}
         </Shell>
       );

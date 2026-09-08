@@ -1,15 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getPublishedPageByPath } from "@/lib/pages/versions";
+import { withoutChromeSections } from "@/lib/pages/site-chrome";
 import type { PageContent } from "@/lib/page-schema";
 import { PageRenderer } from "@/components/renderer/PageRenderer";
-import { SiteNavbar } from "@/components/renderer/SiteNavbar";
 import { TrackPageView } from "@/components/analytics/TrackPageView";
-import {
-  buildPublicMetadata,
-  getPublicSiteBundle,
-  shouldPrependSiteNavbar,
-} from "@/lib/tenant/public-site";
+import { buildPublicMetadata, getPublicSiteBundle } from "@/lib/tenant/public-site";
 import { resolveTenantFromSlug } from "@/lib/tenant/resolve-by-slug";
 
 type Props = {
@@ -45,11 +41,7 @@ export async function PublicClubPageView({ slug, pagePath }: Props) {
     notFound();
   }
 
-  const [bundle, published] = await Promise.all([
-    getPublicSiteBundle(tenant.id),
-    getPublishedPageByPath(tenant.id, pagePath),
-  ]);
-
+  const published = await getPublishedPageByPath(tenant.id, pagePath);
   if (!published) {
     notFound();
   }
@@ -57,19 +49,12 @@ export async function PublicClubPageView({ slug, pagePath }: Props) {
   const content = (published.published.content ?? {
     sections: [],
   }) as PageContent;
-  const prependNav =
-    Boolean(bundle) && shouldPrependSiteNavbar(content.sections);
+  const sections = withoutChromeSections(content.sections);
 
   return (
-    <main className="min-h-full w-full bg-white">
+    <>
       <TrackPageView path={pagePath} />
-      {prependNav && bundle ? (
-        <SiteNavbar brand={bundle.website.name} items={bundle.navigationItems} />
-      ) : null}
-      <PageRenderer content={content} themeTokens={bundle?.themeTokens} />
-      <p className="mx-auto max-w-4xl px-6 py-4 text-xs text-zinc-400">
-        Published · v{published.published.version} · {published.page.title}
-      </p>
-    </main>
+      <PageRenderer content={{ sections }} />
+    </>
   );
 }

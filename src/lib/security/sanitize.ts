@@ -27,3 +27,24 @@ export function sanitizeHtml(dirty: string): string {
 export function looksLikeHtml(value: string): boolean {
   return /<\/?[a-z][\s\S]*>/i.test(value);
 }
+
+/** Inline-only HTML for headings so TipTap `<p>` / `<h2>` wrappers are not shown as tags. */
+export function sanitizeHeadingHtml(dirty: string): string {
+  if (!dirty) return "";
+  return sanitizeHtmlLib(dirty, {
+    allowedTags: ["strong", "b", "em", "i", "u", "s", "br", "span", "a", "code"],
+    allowedAttributes: {
+      a: ["href", "target", "rel"],
+      span: ["class", "style"],
+    },
+    allowedSchemes: ["http", "https", "mailto", "tel"],
+  }).trim();
+}
+
+/** Plain text from HTML, for alt attributes and iframe titles. */
+export function stripHtml(value: string): string {
+  if (!value) return "";
+  return sanitizeHtmlLib(value, { allowedTags: [], allowedAttributes: {} })
+    .replace(/\s+/g, " ")
+    .trim();
+}

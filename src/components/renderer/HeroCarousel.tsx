@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { SiteLink } from "@/components/public/SiteLink";
+import { HtmlContent } from "./HtmlContent";
 
 export type HeroSlide = {
   imageUrl?: string;
@@ -61,21 +63,27 @@ export function HeroCarousel({ slides, intervalMs = 5000 }: Props) {
 
       <div className="relative z-10 mx-auto flex min-h-[22rem] max-w-3xl flex-col justify-center px-6 py-16 text-center text-white sm:min-h-[28rem]">
         {slide.heading ? (
-          <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
-            {slide.heading}
-          </h1>
+          <HtmlContent
+            value={slide.heading}
+            as="h1"
+            className="text-4xl font-semibold tracking-tight sm:text-5xl"
+          />
         ) : null}
         {slide.description ? (
-          <p className="mt-4 text-lg text-white/90">{slide.description}</p>
+          <HtmlContent
+            value={slide.description}
+            as="div"
+            className="mt-4 text-lg text-white/90 [&_p]:m-0"
+          />
         ) : null}
         {slide.ctaLabel ? (
           <div className="mt-8">
-            <a
+            <SiteLink
               href={slide.ctaHref || "#"}
               className="inline-flex rounded-md bg-white px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-100"
             >
               {slide.ctaLabel}
-            </a>
+            </SiteLink>
           </div>
         ) : null}
       </div>

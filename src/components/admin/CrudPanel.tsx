@@ -53,9 +53,10 @@ export function CrudPanel({
 
   async function onCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const formEl = e.currentTarget;
     setSaving(true);
     setError(null);
-    const form = new FormData(e.currentTarget);
+    const form = new FormData(formEl);
     const body: Record<string, unknown> = {};
     for (const field of fields) {
       if (field.type === "checkbox") {
@@ -88,7 +89,7 @@ export function CrudPanel({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Create failed");
-      e.currentTarget.reset();
+      formEl.reset();
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Create failed");

@@ -31,9 +31,10 @@ export default function AdminMembersPage() {
 
   async function onInvite(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const formEl = e.currentTarget;
     setBusy(true);
     setError(null);
-    const form = new FormData(e.currentTarget);
+    const form = new FormData(formEl);
     try {
       const res = await fetch("/api/memberships", {
         method: "POST",
@@ -45,7 +46,7 @@ export default function AdminMembersPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Invite failed");
-      e.currentTarget.reset();
+      formEl.reset();
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Invite failed");

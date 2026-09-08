@@ -31,10 +31,11 @@ export default function AdminDomainsPage() {
 
   async function onAdd(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const formEl = e.currentTarget;
     setBusy("add");
     setError(null);
     const hostname = String(
-      new FormData(e.currentTarget).get("hostname") ?? "",
+      new FormData(formEl).get("hostname") ?? "",
     ).trim();
     try {
       const res = await fetch("/api/domains", {
@@ -44,7 +45,7 @@ export default function AdminDomainsPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Add failed");
-      e.currentTarget.reset();
+      formEl.reset();
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Add failed");

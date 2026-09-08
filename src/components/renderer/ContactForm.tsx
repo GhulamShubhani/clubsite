@@ -14,9 +14,10 @@ export function ContactForm({ submitLabel = "Send message" }: Props) {
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const formEl = e.currentTarget;
     setStatus("sending");
     setError(null);
-    const fd = new FormData(e.currentTarget);
+    const fd = new FormData(formEl);
     const body = {
       name: String(fd.get("name") ?? "").trim(),
       email: String(fd.get("email") ?? "").trim(),
@@ -38,7 +39,7 @@ export function ContactForm({ submitLabel = "Send message" }: Props) {
         return;
       }
       setStatus("ok");
-      e.currentTarget.reset();
+      formEl.reset();
     } catch {
       setStatus("error");
       setError("Failed to send message");

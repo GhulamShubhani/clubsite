@@ -69,10 +69,11 @@ export default function AdminPlayersPage() {
 
   async function onCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const formEl = event.currentTarget;
     setSaving(true);
     setError(null);
     setMessage(null);
-    const form = new FormData(event.currentTarget);
+    const form = new FormData(formEl);
     const statsText = String(form.get("stats") ?? "").trim();
     let stats: Record<string, unknown> | null = null;
     if (statsText) {
@@ -106,7 +107,7 @@ export default function AdminPlayersPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to create player");
-      event.currentTarget.reset();
+      formEl.reset();
       setMessage("Player added to the roster.");
       await load();
     } catch (err) {

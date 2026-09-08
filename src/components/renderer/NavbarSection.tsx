@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type CSSProperties } from "react";
 import type { RenderDevice } from "@/components/renderer/PageRenderer";
+import { SiteLink } from "@/components/public/SiteLink";
 import { site } from "@/components/renderer/site-classes";
 
 type LinkItem = { label?: string; href?: string };
@@ -72,7 +73,7 @@ export function NavbarSection({
       style={shellStyle}
     >
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
-        <a
+        <SiteLink
           href="/"
           className="flex min-w-0 items-center gap-2 font-semibold text-[var(--color-text)] [font-family:var(--font-heading,var(--font-family))]"
         >
@@ -81,7 +82,7 @@ export function NavbarSection({
             <img src={logoUrl} alt="" className="h-8 w-8 shrink-0 object-contain" />
           ) : null}
           <span className="truncate text-lg">{brand}</span>
-        </a>
+        </SiteLink>
 
         {showMenuButton ? (
           <button
@@ -106,14 +107,18 @@ export function NavbarSection({
         {!isCompact ? (
           <nav id={`${sectionId}-nav`} className={navClass}>
             {links.map((link, i) => (
-              <a key={`${link.label}-${i}`} href={link.href ?? "#"} className={site.link}>
+              <SiteLink
+                key={`${link.label}-${i}`}
+                href={link.href ?? "#"}
+                className={site.link}
+              >
                 {link.label ?? "Link"}
-              </a>
+              </SiteLink>
             ))}
             {ctaLabel ? (
-              <a href={ctaHref ?? "#"} className={site.navCta}>
+              <SiteLink href={ctaHref ?? "#"} className={site.navCta}>
                 {ctaLabel}
-              </a>
+              </SiteLink>
             ) : null}
           </nav>
         ) : null}
@@ -122,23 +127,23 @@ export function NavbarSection({
       {isCompact ? (
         <nav id={`${sectionId}-nav`} className={navClass}>
           {links.map((link, i) => (
-            <a
+            <SiteLink
               key={`${link.label}-${i}`}
               href={link.href ?? "#"}
               className={site.link}
               onClick={() => setOpen(false)}
             >
               {link.label ?? "Link"}
-            </a>
+            </SiteLink>
           ))}
           {ctaLabel ? (
-            <a
+            <SiteLink
               href={ctaHref ?? "#"}
               className={`${site.navCta} w-fit`}
               onClick={() => setOpen(false)}
             >
               {ctaLabel}
-            </a>
+            </SiteLink>
           ) : null}
         </nav>
       ) : null}

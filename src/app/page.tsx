@@ -3,15 +3,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getRequestTenant } from "@/lib/tenant/request";
 import { getPublishedPageByPath } from "@/lib/pages/versions";
+import { withoutChromeSections } from "@/lib/pages/site-chrome";
+import { loadPublicShell } from "@/lib/pages/load-public-shell";
 import type { PageContent } from "@/lib/page-schema";
 import { PageRenderer } from "@/components/renderer/PageRenderer";
-import { SiteNavbar } from "@/components/renderer/SiteNavbar";
 import { TrackPageView } from "@/components/analytics/TrackPageView";
 import { StructuredData } from "@/components/seo/StructuredData";
+import { PublicSiteProvider } from "@/components/public/PublicSiteContext";
+import { PublicSiteShell } from "@/components/public/PublicSiteShell";
 import {
   buildPublicMetadata,
   getPublicSiteBundle,
-  shouldPrependSiteNavbar,
 } from "@/lib/tenant/public-site";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -39,69 +41,58 @@ export default async function HomePage() {
   const host = h.get("host") ?? "localhost:3000";
 
   if (resolution.kind === "tenant") {
-    const bundle = await getPublicSiteBundle(resolution.tenant.id);
+    const { bundle, navItems, chrome } = await loadPublicShell(
+      resolution.tenant.id,
+    );
     const published = await getPublishedPageByPath(resolution.tenant.id, "/");
     const content = (published?.published.content ?? {
       sections: [],
     }) as PageContent;
-    const prependNav =
-      Boolean(bundle) &&
-      published &&
-      shouldPrependSiteNavbar(content.sections);
+    const sections = withoutChromeSections(content.sections);
 
     return (
-      <main className="min-h-full w-full">
-        {bundle ? (
-          <StructuredData
-            name={bundle.website.name}
-            description={bundle.website.seoDescription}
-            url={bundle.website.canonicalUrl ?? `${h.get("x-forwarded-proto") ?? "https"}://${host}`}
-            pageTitle={published?.page.seoTitle ?? published?.page.title}
-            logoUrl={bundle.website.faviconUrl}
-          />
-        ) : null}
-        <TrackPageView path="/" />
-        {published ? (
-          <>
-            {prependNav && bundle ? (
-              <SiteNavbar
-                brand={bundle.website.name}
-                items={bundle.navigationItems}
-              />
-            ) : null}
-            <PageRenderer
-              content={content}
-              themeTokens={bundle?.themeTokens}
+      <PublicSiteProvider basePath="">
+        <PublicSiteShell
+          brand={bundle?.website.name ?? resolution.tenant.name}
+          navItems={navItems}
+          navbar={chrome.navbar}
+          footer={chrome.footer}
+          themeTokens={bundle?.themeTokens}
+        >
+          {bundle ? (
+            <StructuredData
+              name={bundle.website.name}
+              description={bundle.website.seoDescription}
+              url={
+                bundle.website.canonicalUrl ??
+                `${h.get("x-forwarded-proto") ?? "https"}://${host}`
+              }
+              pageTitle={published?.page.seoTitle ?? published?.page.title}
+              logoUrl={bundle.website.faviconUrl}
             />
-            <p className="mx-auto max-w-3xl px-6 py-4 text-xs text-zinc-400">
-              Published v{published.published.version}
-            </p>
-          </>
-        ) : (
-          <div className="mx-auto flex max-w-3xl flex-col justify-center gap-6 px-6 py-16">
-            <p className="text-sm uppercase tracking-[0.2em] text-zinc-500">
-              Public club site · published only
-            </p>
-            <h1 className="text-4xl font-semibold tracking-tight text-zinc-900">
-              {bundle?.website.seoTitle ?? resolution.tenant.name}
-            </h1>
-            <p className="text-lg text-zinc-600">
-              This club has not published a live homepage yet. Draft edits stay
-              private until Publish.
-            </p>
-            <p className="rounded-lg bg-zinc-100 px-4 py-3 font-mono text-sm text-zinc-700">
-              Resolved from hostname <strong>{host}</strong> → slug{" "}
-              <strong>{resolution.tenant.slug}</strong>
-            </p>
-            <Link
-              href="/admin"
-              className="w-fit rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white"
-            >
-              Club admin
-            </Link>
-          </div>
-        )}
-      </main>
+          ) : null}
+          <TrackPageView path="/" />
+          {published ? (
+            <PageRenderer content={{ sections }} />
+          ) : (
+            <div className="mx-auto flex max-w-3xl flex-col justify-center gap-6 px-6 py-16">
+              <h1 className="text-4xl font-semibold tracking-tight">
+                {bundle?.website.seoTitle ?? resolution.tenant.name}
+              </h1>
+              <p className="text-lg opacity-80">
+                This club has not published a live homepage yet. Draft edits stay
+                private until Publish.
+              </p>
+              <Link
+                href="/admin"
+                className="w-fit rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white"
+              >
+                Club admin
+              </Link>
+            </div>
+          )}
+        </PublicSiteShell>
+      </PublicSiteProvider>
     );
   }
 

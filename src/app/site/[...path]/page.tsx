@@ -3,15 +3,17 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { resolveTenantFromHost } from "@/lib/tenant/resolve";
 import { getPublishedPageByPath } from "@/lib/pages/versions";
+import { withoutChromeSections } from "@/lib/pages/site-chrome";
+import { loadPublicShell } from "@/lib/pages/load-public-shell";
 import type { PageContent } from "@/lib/page-schema";
 import { PageRenderer } from "@/components/renderer/PageRenderer";
-import { SiteNavbar } from "@/components/renderer/SiteNavbar";
 import { TrackPageView } from "@/components/analytics/TrackPageView";
 import { StructuredData } from "@/components/seo/StructuredData";
+import { PublicSiteProvider } from "@/components/public/PublicSiteContext";
+import { PublicSiteShell } from "@/components/public/PublicSiteShell";
 import {
   buildPublicMetadata,
   getPublicSiteBundle,
-  shouldPrependSiteNavbar,
 } from "@/lib/tenant/public-site";
 
 type Props = { params: Promise<{ path?: string[] }> };
@@ -60,8 +62,8 @@ export default async function PublicCatchAllPage({ params }: Props) {
   const path = pathFromSegments(segments);
   const siteUrl = `${h.get("x-forwarded-proto") ?? "https"}://${host ?? ""}`;
 
-  const [bundle, published] = await Promise.all([
-    getPublicSiteBundle(resolution.tenant.id),
+  const [{ bundle, navItems, chrome }, published] = await Promise.all([
+    loadPublicShell(resolution.tenant.id),
     getPublishedPageByPath(resolution.tenant.id, path),
   ]);
 
@@ -72,29 +74,30 @@ export default async function PublicCatchAllPage({ params }: Props) {
   const content = (published.published.content ?? {
     sections: [],
   }) as PageContent;
-  const prependNav =
-    Boolean(bundle) && shouldPrependSiteNavbar(content.sections);
+  const sections = withoutChromeSections(content.sections);
 
   return (
-    <main className="min-h-full w-full">
-      {bundle ? (
-        <StructuredData
-          name={bundle.website.name}
-          description={bundle.website.seoDescription}
-          url={bundle.website.canonicalUrl ?? siteUrl}
-          pageTitle={published.page.seoTitle ?? published.page.title}
-          pagePath={path}
-          logoUrl={bundle.website.faviconUrl}
-        />
-      ) : null}
-      <TrackPageView path={path} />
-      {prependNav && bundle ? (
-        <SiteNavbar brand={bundle.website.name} items={bundle.navigationItems} />
-      ) : null}
-      <PageRenderer content={content} themeTokens={bundle?.themeTokens} />
-      <p className="mx-auto max-w-4xl px-6 py-4 text-xs text-zinc-400">
-        Published · v{published.published.version} · {published.page.title}
-      </p>
-    </main>
+    <PublicSiteProvider basePath="">
+      <PublicSiteShell
+        brand={bundle?.website.name ?? resolution.tenant.name}
+        navItems={navItems}
+        navbar={chrome.navbar}
+        footer={chrome.footer}
+        themeTokens={bundle?.themeTokens}
+      >
+        {bundle ? (
+          <StructuredData
+            name={bundle.website.name}
+            description={bundle.website.seoDescription}
+            url={bundle.website.canonicalUrl ?? siteUrl}
+            pageTitle={published.page.seoTitle ?? published.page.title}
+            pagePath={path}
+            logoUrl={bundle.website.faviconUrl}
+          />
+        ) : null}
+        <TrackPageView path={path} />
+        <PageRenderer content={{ sections }} />
+      </PublicSiteShell>
+    </PublicSiteProvider>
   );
 }

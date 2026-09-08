@@ -70,10 +70,11 @@ export default function AdminEventsPage() {
 
   async function onCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const formEl = event.currentTarget;
     setSaving(true);
     setError(null);
     setMessage(null);
-    const form = new FormData(event.currentTarget);
+    const form = new FormData(formEl);
     const startsAt = String(form.get("startsAt") ?? "");
     const endsAt = String(form.get("endsAt") ?? "");
     const body = {
@@ -92,7 +93,7 @@ export default function AdminEventsPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to create event");
-      event.currentTarget.reset();
+      formEl.reset();
       setMessage("Event created successfully.");
       await load();
     } catch (err) {

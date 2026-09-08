@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  useTransition,
-} from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   DndContext,
@@ -44,6 +38,35 @@ type BuilderShellProps = {
   initialTitle: string;
   initialContent: PageContent;
 };
+
+type ActionPhase = "idle" | "loading" | "done";
+
+function ActionButtonLabel({
+  phase,
+  idle,
+  loading,
+  done,
+  spinnerClass,
+}: {
+  phase: ActionPhase;
+  idle: string;
+  loading: string;
+  done: string;
+  spinnerClass: string;
+}) {
+  const label = phase === "loading" ? loading : phase === "done" ? done : idle;
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      {phase === "loading" ? (
+        <span
+          className={`inline-block h-3 w-3 animate-spin rounded-full border-2 ${spinnerClass}`}
+          aria-hidden
+        />
+      ) : null}
+      {label}
+    </span>
+  );
+}
 
 const HERO_LAYOUTS = [
   { value: "centered", label: "Simple text (centered)" },
@@ -190,11 +213,15 @@ function HeroCarouselEditor({
                 updateSlide(index, { ctaLabel: e.target.value })
               }
             />
+            <p className="mt-1 text-[11px] text-zinc-400">
+              Leave empty to hide this button.
+            </p>
           </label>
           <label className="block">
             <span className="text-xs text-zinc-500">Button link</span>
             <input
               className={fieldClass()}
+              placeholder="https://example.com or /join"
               value={String(slide.ctaHref ?? "")}
               onChange={(e) => updateSlide(index, { ctaHref: e.target.value })}
             />
@@ -587,6 +614,60 @@ function PropertiesPanel() {
                     />
                   </label>
                 ) : null}
+                <label className="block">
+                  <span className="text-xs text-zinc-500">Button text</span>
+                  <input
+                    className={fieldClass()}
+                    placeholder="Get started"
+                    value={String(
+                      props.ctaLabel ??
+                        (Array.isArray(props.buttons)
+                          ? (props.buttons as Array<{ label?: string }>)[0]
+                              ?.label
+                          : "") ??
+                        "",
+                    )}
+                    onChange={(e) => {
+                      const label = e.target.value;
+                      const href = String(props.ctaHref ?? "");
+                      updateProps(selected.id, {
+                        ctaLabel: label,
+                        ctaHref: href,
+                        buttons: label.trim()
+                          ? [{ label: label.trim(), href: href.trim() || "#" }]
+                          : [],
+                      });
+                    }}
+                  />
+                  <p className="mt-1 text-[11px] text-zinc-400">
+                    Leave empty to hide this button.
+                  </p>
+                </label>
+                <label className="block">
+                  <span className="text-xs text-zinc-500">Button link</span>
+                  <input
+                    className={fieldClass()}
+                    placeholder="https://example.com or /join"
+                    value={String(
+                      props.ctaHref ??
+                        (Array.isArray(props.buttons)
+                          ? (props.buttons as Array<{ href?: string }>)[0]?.href
+                          : "") ??
+                        "",
+                    )}
+                    onChange={(e) => {
+                      const href = e.target.value;
+                      const label = String(props.ctaLabel ?? "");
+                      updateProps(selected.id, {
+                        ctaLabel: label,
+                        ctaHref: href,
+                        buttons: label.trim()
+                          ? [{ label: label.trim(), href: href.trim() || "#" }]
+                          : [],
+                      });
+                    }}
+                  />
+                </label>
               </>
             )}
           </div>
@@ -1136,63 +1217,76 @@ export function BuilderShell({
   const markSaved = useBuilderStore((s) => s.markSaved);
 
   const [status, setStatus] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
+  const [savePhase, setSavePhase] = useState<ActionPhase>("idle");
+  const [publishPhase, setPublishPhase] = useState<ActionPhase>("idle");
+  const busy = savePhase === "loading" || publishPhase === "loading";
 
   useEffect(() => {
     load(pageId, initialTitle, initialContent);
   }, [pageId, initialTitle, initialContent, load]);
 
-  function saveDraft() {
-    startTransition(async () => {
-      setStatus(null);
-      try {
-        const res = await fetch(`/api/pages/${pageId}/draft`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ content: { sections } }),
-        });
-        if (!res.ok) {
-          const data = (await res.json().catch(() => null)) as {
-            error?: string;
-          } | null;
-          throw new Error(data?.error ?? "Failed to save draft");
-        }
-        markSaved();
-        setStatus("Draft saved");
-      } catch (err) {
-        setStatus(err instanceof Error ? err.message : "Save failed");
+  useEffect(() => {
+    if (!dirty) return;
+    setSavePhase("idle");
+    setPublishPhase("idle");
+  }, [dirty]);
+
+  async function saveDraft() {
+    if (busy) return;
+    setSavePhase("loading");
+    setStatus(null);
+    try {
+      const res = await fetch(`/api/pages/${pageId}/draft`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: { sections } }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        throw new Error(data?.error ?? "Failed to save draft");
       }
-    });
+      markSaved();
+      setSavePhase("done");
+      setStatus("Draft saved");
+    } catch (err) {
+      setSavePhase("idle");
+      setStatus(err instanceof Error ? err.message : "Save failed");
+    }
   }
 
-  function publish() {
-    startTransition(async () => {
-      setStatus(null);
-      try {
-        const saveRes = await fetch(`/api/pages/${pageId}/draft`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ content: { sections } }),
-        });
-        if (!saveRes.ok) {
-          throw new Error("Could not save draft before publish");
-        }
-        markSaved();
-
-        const res = await fetch(`/api/pages/${pageId}/publish`, {
-          method: "POST",
-        });
-        if (!res.ok) {
-          const data = (await res.json().catch(() => null)) as {
-            error?: string;
-          } | null;
-          throw new Error(data?.error ?? "Publish failed");
-        }
-        setStatus("Published");
-      } catch (err) {
-        setStatus(err instanceof Error ? err.message : "Publish failed");
+  async function publish() {
+    if (busy) return;
+    setPublishPhase("loading");
+    setStatus(null);
+    try {
+      const saveRes = await fetch(`/api/pages/${pageId}/draft`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: { sections } }),
+      });
+      if (!saveRes.ok) {
+        throw new Error("Could not save draft before publish");
       }
-    });
+      markSaved();
+      setSavePhase("done");
+
+      const res = await fetch(`/api/pages/${pageId}/publish`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        throw new Error(data?.error ?? "Publish failed");
+      }
+      setPublishPhase("done");
+      setStatus("Published");
+    } catch (err) {
+      setPublishPhase("idle");
+      setStatus(err instanceof Error ? err.message : "Publish failed");
+    }
   }
 
   return (
@@ -1234,19 +1328,33 @@ export function BuilderShell({
           </Link>
           <button
             type="button"
-            onClick={saveDraft}
-            disabled={pending}
-            className="rounded-md border border-zinc-300 bg-white px-3 py-1 text-xs font-medium text-zinc-800 hover:bg-zinc-50 disabled:opacity-50"
+            onClick={() => void saveDraft()}
+            disabled={busy}
+            aria-busy={savePhase === "loading"}
+            className="min-w-23 rounded-md border border-zinc-300 bg-white px-3 py-1 text-xs font-medium text-zinc-800 hover:bg-zinc-50 disabled:opacity-50"
           >
-            Save Draft
+            <ActionButtonLabel
+              phase={savePhase}
+              idle="Save Draft"
+              loading="Saving..."
+              done="Saved"
+              spinnerClass="border-zinc-300 border-t-zinc-700"
+            />
           </button>
           <button
             type="button"
-            onClick={publish}
-            disabled={pending}
-            className="rounded-md bg-zinc-900 px-3 py-1 text-xs font-medium text-white hover:bg-zinc-800 disabled:opacity-50"
+            onClick={() => void publish()}
+            disabled={busy}
+            aria-busy={publishPhase === "loading"}
+            className="min-w-23 rounded-md bg-zinc-900 px-3 py-1 text-xs font-medium text-white hover:bg-zinc-800 disabled:opacity-50"
           >
-            Publish
+            <ActionButtonLabel
+              phase={publishPhase}
+              idle="Publish"
+              loading="Publishing..."
+              done="Published"
+              spinnerClass="border-white/30 border-t-white"
+            />
           </button>
         </div>
       </header>

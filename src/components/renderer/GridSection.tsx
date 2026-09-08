@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import type { RenderDevice } from "./PageRenderer";
+import { SiteLink } from "@/components/public/SiteLink";
+import { HtmlContent } from "./HtmlContent";
 import { site } from "./site-classes";
 
 export type GridVariant =
@@ -151,9 +153,9 @@ function ItemShell({
 }) {
   if (href) {
     return (
-      <a href={href} className={`block transition hover:opacity-95 ${className ?? ""}`}>
+      <SiteLink href={href} className={`block transition hover:opacity-95 ${className ?? ""}`}>
         {children}
-      </a>
+      </SiteLink>
     );
   }
   return <div className={className}>{children}</div>;
@@ -288,12 +290,14 @@ function HeadingBlock({
   return (
     <div className="mb-4">
       {heading ? (
-        <h2 className={site.h2}>
-          {heading}
-        </h2>
+        <HtmlContent value={heading} as="h2" className={site.h2} />
       ) : null}
       {description ? (
-        <p className={`mt-2 ${site.body}`}>{description}</p>
+        <HtmlContent
+          value={description}
+          className={`mt-2 ${site.body} [&_p]:m-0`}
+          as="div"
+        />
       ) : null}
     </div>
   );
