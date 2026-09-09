@@ -6,6 +6,7 @@ export default function AdminLeaderboardsPage() {
   return (
     <CrudPanel
       title="Leaderboards"
+      description="Add a leaderboard here. It is saved and listed below straight away."
       endpoint="/api/gaming/leaderboards"
       itemsKey="leaderboards"
       fields={[

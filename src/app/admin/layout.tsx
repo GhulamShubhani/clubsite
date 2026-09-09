@@ -9,6 +9,7 @@ import { getClubPublicUrl } from "@/lib/tenant/public-url";
 
 const NAV = [
   { href: "/admin", label: "Dashboard" },
+  { href: "/admin/messages", label: "Messages" },
   { href: "/admin/pages", label: "Pages" },
   { href: "/admin/templates", label: "Templates" },
   { href: "/admin/pages", label: "Builder" },

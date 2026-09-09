@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { AdminFormSkeleton } from "@/components/admin/AdminSkeleton";
 
 type NavItem = { label: string; href: string };
 
@@ -10,18 +11,25 @@ export default function AdminNavigationPage() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     setError(null);
-    const res = await fetch("/api/navigation");
-    const data = await res.json();
-    if (!res.ok) {
-      setError(data.error ?? "Failed to load navigation");
-      return;
+    try {
+      const res = await fetch("/api/navigation");
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Failed to load navigation");
+        return;
+      }
+      const next = (data.items as NavItem[]) ?? [];
+      setItems(next);
+      setJsonText(JSON.stringify(next, null, 2));
+    } catch {
+      setError("Failed to load navigation");
+    } finally {
+      setLoading(false);
     }
-    const next = (data.items as NavItem[]) ?? [];
-    setItems(next);
-    setJsonText(JSON.stringify(next, null, 2));
   }, []);
 
   useEffect(() => {
@@ -97,6 +105,10 @@ export default function AdminNavigationPage() {
       {error && <p className="text-sm text-red-600">{error}</p>}
       {message && <p className="text-sm text-emerald-700">{message}</p>}
 
+      {loading ? (
+        <AdminFormSkeleton />
+      ) : (
+      <>
       <div className="space-y-3 rounded-lg border border-zinc-200 bg-white p-4">
         {items.map((item, index) => (
           <div key={index} className="flex flex-wrap gap-2">
@@ -157,6 +169,8 @@ export default function AdminNavigationPage() {
       >
         {saving ? "Saving…" : "Save navigation"}
       </button>
+      </>
+      )}
     </div>
   );
 }

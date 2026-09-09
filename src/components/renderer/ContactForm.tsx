@@ -1,12 +1,21 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { usePublicSite } from "@/components/public/PublicSiteContext";
 
 type Props = {
   submitLabel?: string;
+  formTitle?: string;
 };
 
-export function ContactForm({ submitLabel = "Send message" }: Props) {
+const fieldClass =
+  "w-full rounded-md border border-zinc-300 px-3 py-2 text-sm";
+
+export function ContactForm({
+  submitLabel = "Send message",
+  formTitle = "Contact",
+}: Props) {
+  const { tenantSlug } = usePublicSite();
   const [status, setStatus] = useState<"idle" | "sending" | "ok" | "error">(
     "idle",
   );
@@ -21,7 +30,10 @@ export function ContactForm({ submitLabel = "Send message" }: Props) {
     const body = {
       name: String(fd.get("name") ?? "").trim(),
       email: String(fd.get("email") ?? "").trim(),
+      phone: String(fd.get("phone") ?? "").trim(),
+      formTitle,
       message: String(fd.get("message") ?? "").trim(),
+      ...(tenantSlug ? { slug: tenantSlug } : {}),
     };
     try {
       const res = await fetch("/api/contact", {
@@ -35,42 +47,64 @@ export function ContactForm({ submitLabel = "Send message" }: Props) {
       };
       if (!res.ok || !data.ok) {
         setStatus("error");
-        setError(data.error ?? "Failed to send message");
+        setError(data.error ?? "Could not send. Please try again.");
         return;
       }
       setStatus("ok");
       formEl.reset();
     } catch {
       setStatus("error");
-      setError("Failed to send message");
+      setError("Could not send. Please try again.");
     }
   }
 
   return (
     <form className="mx-auto max-w-md space-y-3" onSubmit={onSubmit}>
-      <input
-        className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
-        placeholder="Name"
-        name="name"
-        required
-        disabled={status === "sending"}
-      />
-      <input
-        className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
-        placeholder="Email"
-        name="email"
-        type="email"
-        required
-        disabled={status === "sending"}
-      />
-      <textarea
-        className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
-        placeholder="Message"
-        name="message"
-        rows={4}
-        required
-        disabled={status === "sending"}
-      />
+      <label className="block text-sm">
+        <span className="mb-1 block text-zinc-600">Your name</span>
+        <input
+          className={fieldClass}
+          placeholder="Name"
+          name="name"
+          autoComplete="name"
+          required
+          disabled={status === "sending"}
+        />
+      </label>
+      <label className="block text-sm">
+        <span className="mb-1 block text-zinc-600">Email</span>
+        <input
+          className={fieldClass}
+          placeholder="Email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          required
+          disabled={status === "sending"}
+        />
+      </label>
+      <label className="block text-sm">
+        <span className="mb-1 block text-zinc-600">Phone (optional)</span>
+        <input
+          className={fieldClass}
+          placeholder="Phone"
+          name="phone"
+          type="tel"
+          autoComplete="tel"
+          disabled={status === "sending"}
+        />
+      </label>
+      <label className="block text-sm">
+        <span className="mb-1 block text-zinc-600">Message</span>
+        <textarea
+          className={fieldClass}
+          placeholder="Message"
+          name="message"
+          rows={4}
+          required
+          disabled={status === "sending"}
+        />
+      </label>
       <button
         type="submit"
         disabled={status === "sending"}
@@ -79,7 +113,9 @@ export function ContactForm({ submitLabel = "Send message" }: Props) {
         {status === "sending" ? "Sending…" : submitLabel}
       </button>
       {status === "ok" ? (
-        <p className="text-sm text-green-700">Message sent. Thanks!</p>
+        <p className="text-sm text-green-700">
+          Sent. Thank you — we will get back to you.
+        </p>
       ) : null}
       {status === "error" && error ? (
         <p className="text-sm text-red-600">{error}</p>

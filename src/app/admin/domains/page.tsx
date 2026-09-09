@@ -1,6 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import {
+  AdminEmptyState,
+  AdminListSkeleton,
+} from "@/components/admin/AdminSkeleton";
 
 type Domain = {
   id: string;
@@ -12,17 +16,26 @@ type Domain = {
 
 export default function AdminDomainsPage() {
   const [domains, setDomains] = useState<Domain[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const res = await fetch("/api/domains");
-    const data = await res.json();
-    if (!res.ok) {
-      setError(data.error ?? "Failed to load domains");
-      return;
+    try {
+      const res = await fetch("/api/domains");
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Failed to load domains");
+        setDomains([]);
+        return;
+      }
+      setDomains(data.domains ?? []);
+    } catch {
+      setError("Failed to load domains");
+      setDomains([]);
+    } finally {
+      setLoading(false);
     }
-    setDomains(data.domains ?? []);
   }, []);
 
   useEffect(() => {
@@ -100,6 +113,14 @@ export default function AdminDomainsPage() {
         </button>
       </form>
 
+      {loading ? (
+        <AdminListSkeleton rows={3} />
+      ) : domains.length === 0 ? (
+        <AdminEmptyState
+          title="No domains yet"
+          description="Add a custom hostname to connect your club website."
+        />
+      ) : (
       <ul className="divide-y divide-zinc-100 rounded-lg border border-zinc-200 bg-white">
         {domains.map((d) => (
           <li
@@ -126,10 +147,8 @@ export default function AdminDomainsPage() {
             )}
           </li>
         ))}
-        {domains.length === 0 && (
-          <li className="px-4 py-6 text-sm text-zinc-500">No domains yet.</li>
-        )}
       </ul>
+      )}
     </div>
   );
 }

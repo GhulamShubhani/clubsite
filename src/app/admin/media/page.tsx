@@ -1,6 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import {
+  AdminEmptyState,
+  AdminListSkeleton,
+} from "@/components/admin/AdminSkeleton";
 
 type MediaItem = {
   id: string;
@@ -13,6 +17,7 @@ type MediaItem = {
 
 export default function AdminMediaPage() {
   const [media, setMedia] = useState<MediaItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -23,13 +28,21 @@ export default function AdminMediaPage() {
     const params = new URLSearchParams();
     const term = (search ?? q).trim();
     if (term) params.set("q", term);
-    const res = await fetch(`/api/media?${params}`);
-    const data = await res.json();
-    if (!res.ok) {
-      setError(data.error ?? "Failed to load media");
-      return;
+    try {
+      const res = await fetch(`/api/media?${params}`);
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Failed to load media");
+        setMedia([]);
+        return;
+      }
+      setMedia(data.media ?? []);
+    } catch {
+      setError("Failed to load media");
+      setMedia([]);
+    } finally {
+      setLoading(false);
     }
-    setMedia(data.media ?? []);
   }, [q]);
 
   useEffect(() => {
@@ -226,6 +239,14 @@ export default function AdminMediaPage() {
         </div>
       </form>
 
+      {loading ? (
+        <AdminListSkeleton />
+      ) : media.length === 0 ? (
+        <AdminEmptyState
+          title="No media yet"
+          description="Upload a file or add a URL to start your media library."
+        />
+      ) : (
       <ul className="divide-y divide-zinc-100 rounded-lg border border-zinc-200 bg-white">
         {media.map((item) => (
           <li
@@ -294,10 +315,8 @@ export default function AdminMediaPage() {
             </div>
           </li>
         ))}
-        {media.length === 0 && (
-          <li className="px-4 py-6 text-sm text-zinc-500">No media yet.</li>
-        )}
       </ul>
+      )}
     </div>
   );
 }

@@ -1,14 +1,20 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { prisma } from "@/lib/db";
 import { handleApiError, jsonOk } from "@/lib/api";
-import { NotFoundError } from "@/lib/errors";
+import { AppError, NotFoundError } from "@/lib/errors";
 import { rateLimit } from "@/lib/security/rate-limit";
+import { requireTenantAccess } from "@/lib/tenant/access";
 import { resolveTenantFromHost } from "@/lib/tenant/resolve";
+import { resolveTenantFromSlug } from "@/lib/tenant/resolve-by-slug";
 
 const contactSchema = z.object({
   name: z.string().min(1).max(120),
   email: z.string().email(),
+  phone: z.string().max(40).optional(),
+  formTitle: z.string().max(120).optional(),
   message: z.string().min(1).max(5000),
+  slug: z.string().max(80).optional(),
 });
 
 function clientKey(request: Request) {
@@ -19,9 +25,25 @@ function clientKey(request: Request) {
   );
 }
 
-/**
- * Public contact form endpoint. MVP: validates + acknowledges; no email send.
- */
+async function resolvePublicTenant(request: Request, slug?: string) {
+  const fromQuery = slug?.trim().toLowerCase();
+  if (fromQuery) {
+    return resolveTenantFromSlug(fromQuery);
+  }
+
+  const resolved = await resolveTenantFromHost(request.headers.get("host"));
+  if (resolved.kind === "tenant") {
+    return resolved.tenant;
+  }
+
+  try {
+    const ctx = await requireTenantAccess({ minRole: "VIEWER" });
+    return ctx.tenant;
+  } catch {
+    throw new NotFoundError("Club website not found");
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const rl = rateLimit(`contact:${clientKey(request)}`, {
@@ -38,15 +60,31 @@ export async function POST(request: Request) {
       );
     }
 
-    const body = contactSchema.parse(await request.json());
-    const resolved = await resolveTenantFromHost(request.headers.get("host"));
-    if (resolved.kind !== "tenant") {
-      throw new NotFoundError("Club website not found");
+    let json: unknown;
+    try {
+      json = await request.json();
+    } catch {
+      throw new AppError("Please check the form and try again.", 400, "VALIDATION");
     }
+    const body = contactSchema.parse(json);
+    const tenant = await resolvePublicTenant(request, body.slug);
 
-    // MVP: accept submission; persistence/email can be added later.
-    void body;
-    void resolved;
+    const extra = [
+      body.formTitle?.trim() ? `Form: ${body.formTitle.trim()}` : null,
+      body.phone?.trim() ? `Phone: ${body.phone.trim()}` : null,
+    ].filter(Boolean);
+    const message = extra.length
+      ? `${extra.join("\n")}\n\n${body.message}`
+      : body.message;
+
+    await prisma.contactSubmission.create({
+      data: {
+        tenantId: tenant.id,
+        name: body.name,
+        email: body.email,
+        message,
+      },
+    });
 
     return jsonOk({ ok: true }, 201);
   } catch (error) {

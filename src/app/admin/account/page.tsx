@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { AdminFormSkeleton } from "@/components/admin/AdminSkeleton";
 
 export default function AdminAccountPage() {
   const [fullName, setFullName] = useState("");
@@ -12,19 +13,26 @@ export default function AdminAccountPage() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     void (async () => {
-      const res = await fetch("/api/account");
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error ?? "Failed to load account");
-        return;
+      try {
+        const res = await fetch("/api/account");
+        const data = await res.json();
+        if (!res.ok) {
+          setError(data.error ?? "Failed to load account");
+          return;
+        }
+        setFullName(data.user?.fullName ?? "");
+        setEmail(data.user?.email ?? "");
+        setRole(data.role ?? null);
+        setTenantName(data.tenant?.name ?? null);
+      } catch {
+        setError("Failed to load account");
+      } finally {
+        setLoading(false);
       }
-      setFullName(data.user?.fullName ?? "");
-      setEmail(data.user?.email ?? "");
-      setRole(data.role ?? null);
-      setTenantName(data.tenant?.name ?? null);
     })();
   }, []);
 
@@ -63,6 +71,9 @@ export default function AdminAccountPage() {
       {error && <p className="text-sm text-red-600">{error}</p>}
       {message && <p className="text-sm text-emerald-700">{message}</p>}
 
+      {loading ? (
+        <AdminFormSkeleton />
+      ) : (
       <form
         onSubmit={onSave}
         className="space-y-4 rounded-lg border border-zinc-200 bg-white p-4"
@@ -114,6 +125,7 @@ export default function AdminAccountPage() {
           {saving ? "Saving…" : "Save"}
         </button>
       </form>
+      )}
     </div>
   );
 }

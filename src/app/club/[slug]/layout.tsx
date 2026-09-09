@@ -22,7 +22,10 @@ export default async function ClubPublicLayout({ children, params }: Props) {
   const { bundle, navItems, chrome } = await loadPublicShell(tenant.id);
 
   return (
-    <PublicSiteProvider basePath={`/club/${encodeURIComponent(slug)}`}>
+    <PublicSiteProvider
+      basePath={`/club/${encodeURIComponent(slug)}`}
+      tenantSlug={slug}
+    >
       <PublicSiteShell
         brand={bundle?.website.name ?? tenant.name}
         navItems={navItems}

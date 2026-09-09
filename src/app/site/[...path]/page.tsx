@@ -77,7 +77,7 @@ export default async function PublicCatchAllPage({ params }: Props) {
   const sections = withoutChromeSections(content.sections);
 
   return (
-    <PublicSiteProvider basePath="">
+    <PublicSiteProvider basePath="" tenantSlug={resolution.tenant.slug}>
       <PublicSiteShell
         brand={bundle?.website.name ?? resolution.tenant.name}
         navItems={navItems}

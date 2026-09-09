@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { AdminFormSkeleton } from "@/components/admin/AdminSkeleton";
 
 type Seo = {
   name?: string;
@@ -26,24 +27,31 @@ export default function AdminSeoPage() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    const res = await fetch("/api/website/seo");
-    const data = await res.json();
-    if (!res.ok) {
-      setError(data.error ?? "Failed to load SEO");
-      return;
+    try {
+      const res = await fetch("/api/website/seo");
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Failed to load SEO");
+        return;
+      }
+      const s = data.seo as Seo;
+      setSeo({
+        name: s.name ?? "",
+        seoTitle: s.seoTitle ?? "",
+        seoDescription: s.seoDescription ?? "",
+        faviconUrl: s.faviconUrl ?? "",
+        ogImageUrl: s.ogImageUrl ?? "",
+        canonicalUrl: s.canonicalUrl ?? "",
+        robotsIndex: s.robotsIndex ?? true,
+      });
+    } catch {
+      setError("Failed to load SEO");
+    } finally {
+      setLoading(false);
     }
-    const s = data.seo as Seo;
-    setSeo({
-      name: s.name ?? "",
-      seoTitle: s.seoTitle ?? "",
-      seoDescription: s.seoDescription ?? "",
-      faviconUrl: s.faviconUrl ?? "",
-      ogImageUrl: s.ogImageUrl ?? "",
-      canonicalUrl: s.canonicalUrl ?? "",
-      robotsIndex: s.robotsIndex ?? true,
-    });
   }, []);
 
   useEffect(() => {
@@ -115,7 +123,7 @@ export default function AdminSeoPage() {
           <button
             type="submit"
             form="seo-form"
-            disabled={saving}
+            disabled={saving || loading}
             className="rounded-xl bg-zinc-950 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-zinc-950/15 transition hover:-translate-y-0.5 hover:bg-zinc-800 disabled:opacity-60"
           >
             {saving ? "Saving…" : "Save SEO"}
@@ -123,6 +131,9 @@ export default function AdminSeoPage() {
         </div>
       </div>
 
+      {loading ? (
+        <AdminFormSkeleton />
+      ) : (
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)]">
         <form id="seo-form" onSubmit={onSave} className="space-y-6">
           <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
@@ -265,6 +276,7 @@ export default function AdminSeoPage() {
           </section>
         </aside>
       </div>
+      )}
     </div>
   );
 }

@@ -77,8 +77,8 @@ export default function RegisterPage() {
         setSlugAvailable(null);
         setSlugMessage(
           res.status === 429
-            ? "Checking too fast — try again in a moment"
-            : (data.error ?? "Could not check slug"),
+            ? "Checking too fast — try again in a moment."
+            : (data.error ?? "Can't check this name right now. Try again in a moment."),
         );
         setApiSuggestions([]);
         return;
@@ -116,6 +116,7 @@ export default function RegisterPage() {
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+    setSlugMessage(null);
     setLoading(true);
 
     const form = new FormData(e.currentTarget);
@@ -135,12 +136,14 @@ export default function RegisterPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Registration failed");
+        setError(
+          data.error ?? "Could not create your account. Please try again.",
+        );
         return;
       }
       router.push("/login?registered=1");
     } catch {
-      setError("Registration failed");
+      setError("Can't connect right now. Please try again in a moment.");
     } finally {
       setLoading(false);
     }

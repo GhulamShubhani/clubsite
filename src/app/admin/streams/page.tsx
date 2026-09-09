@@ -6,6 +6,7 @@ export default function AdminStreamsPage() {
   return (
     <CrudPanel
       title="Streams"
+      description="Add a stream here. It is saved and listed below straight away."
       endpoint="/api/gaming/streams"
       itemsKey="streams"
       fields={[

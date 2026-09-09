@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { AdminListSkeleton } from "@/components/admin/AdminSkeleton";
 
 type MediaItem = {
   id: string;
@@ -219,7 +220,7 @@ export function MediaPicker({
                 <p className="p-3 text-sm text-red-600">{error}</p>
               ) : null}
               {loading ? (
-                <p className="p-3 text-sm text-zinc-500">Loading…</p>
+                <AdminListSkeleton rows={4} />
               ) : items.length === 0 ? (
                 <p className="p-3 text-sm text-zinc-500">
                   No files in library yet. Upload from your device or paste a URL

@@ -2,6 +2,10 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import {
+  AdminCardsSkeleton,
+  AdminEmptyState,
+} from "@/components/admin/AdminSkeleton";
 
 type TemplatePage = { title: string; path: string };
 
@@ -17,19 +21,29 @@ type Template = {
 
 export default function AdminTemplatesPage() {
   const [templates, setTemplates] = useState<Template[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const res = await fetch("/api/templates");
-    const data = await res.json();
-    if (!res.ok) {
-      setError(data.error ?? "Failed to load templates");
-      return;
+    setError(null);
+    try {
+      const res = await fetch("/api/templates");
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Failed to load templates");
+        setTemplates([]);
+        return;
+      }
+      setTemplates(data.templates ?? []);
+    } catch {
+      setError("Failed to load templates");
+      setTemplates([]);
+    } finally {
+      setLoading(false);
     }
-    setTemplates(data.templates ?? []);
   }, []);
 
   useEffect(() => {
@@ -77,6 +91,16 @@ export default function AdminTemplatesPage() {
       {error && <p className="text-sm text-red-600">{error}</p>}
       {message && <p className="text-sm text-emerald-700">{message}</p>}
 
+      {loading ? <AdminCardsSkeleton /> : null}
+
+      {!loading && templates.length === 0 && !error ? (
+        <AdminEmptyState
+          title="No templates available"
+          description="Templates will appear here once they are loaded."
+        />
+      ) : null}
+
+      {!loading && templates.length > 0 ? (
       <div className="grid gap-5 lg:grid-cols-2">
         {templates.map((t) => {
           const pageCount = t.pageCount ?? t.pages?.length ?? 0;
@@ -156,9 +180,7 @@ export default function AdminTemplatesPage() {
           );
         })}
       </div>
-      {templates.length === 0 && (
-        <p className="text-sm text-zinc-500">No templates available.</p>
-      )}
+      ) : null}
     </div>
   );
 }

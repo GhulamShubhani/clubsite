@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { AdminFormSkeleton } from "@/components/admin/AdminSkeleton";
 
 type Tokens = {
   primary: string;
@@ -101,16 +102,23 @@ export default function AdminThemePage() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [activePalette, setActivePalette] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const res = await fetch("/api/theme");
-    const data = await res.json();
-    if (!res.ok) {
-      setError(data.error ?? "Failed to load theme");
-      return;
+    try {
+      const res = await fetch("/api/theme");
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Failed to load theme");
+        return;
+      }
+      setTokens({ ...defaults, ...(data.tokens as Tokens) });
+    } catch {
+      setError("Failed to load theme");
+    } finally {
+      setLoading(false);
     }
-    setTokens({ ...defaults, ...(data.tokens as Tokens) });
   }, []);
 
   useEffect(() => {
@@ -190,7 +198,7 @@ export default function AdminThemePage() {
           <button
             type="submit"
             form="theme-form"
-            disabled={saving}
+            disabled={saving || loading}
             className="rounded-xl bg-zinc-950 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-zinc-950/15 transition hover:-translate-y-0.5 hover:bg-zinc-800 disabled:opacity-60"
           >
             {saving ? "Saving…" : "Save changes"}
@@ -198,6 +206,9 @@ export default function AdminThemePage() {
         </div>
       </div>
 
+      {loading ? (
+        <AdminFormSkeleton />
+      ) : (
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(420px,1.15fr)]">
         <form id="theme-form" onSubmit={onSave} className="space-y-6">
           <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
@@ -375,6 +386,7 @@ export default function AdminThemePage() {
           </div>
         </section>
       </div>
+      )}
     </div>
   );
 }

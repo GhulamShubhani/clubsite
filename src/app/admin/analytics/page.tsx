@@ -1,6 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  AdminEmptyState,
+  AdminListSkeleton,
+  AdminStatsSkeleton,
+} from "@/components/admin/AdminSkeleton";
 
 type Summary = {
   totalViews: number;
@@ -16,17 +21,24 @@ type Summary = {
 
 export default function AdminAnalyticsPage() {
   const [summary, setSummary] = useState<Summary | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     void (async () => {
-      const res = await fetch("/api/analytics");
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error ?? "Failed to load analytics");
-        return;
+      try {
+        const res = await fetch("/api/analytics");
+        const data = await res.json();
+        if (!res.ok) {
+          setError(data.error ?? "Failed to load analytics");
+          return;
+        }
+        setSummary(data.summary);
+      } catch {
+        setError("Failed to load analytics");
+      } finally {
+        setLoading(false);
       }
-      setSummary(data.summary);
     })();
   }, []);
 
@@ -34,8 +46,14 @@ export default function AdminAnalyticsPage() {
     <div className="mx-auto max-w-3xl space-y-6">
       <h1 className="text-2xl font-semibold text-zinc-900">Analytics</h1>
       {error && <p className="text-sm text-red-600">{error}</p>}
-      {!summary && !error && (
-        <p className="text-sm text-zinc-500">Loading…</p>
+      {loading && (
+        <>
+          <AdminStatsSkeleton />
+          <AdminListSkeleton rows={4} />
+        </>
+      )}
+      {!loading && !summary && !error && (
+        <AdminEmptyState title="No data yet" description="Analytics will appear after visitors view your site." />
       )}
       {summary && (
         <>

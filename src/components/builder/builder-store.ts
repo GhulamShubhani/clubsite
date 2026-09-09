@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { PageContent, PageSection } from "@/lib/page-schema";
 import { createSection } from "@/lib/components/registry";
+import { cloneSectionWithNewIds } from "@/lib/components/clone-section";
 import type { RenderDevice } from "@/components/renderer/PageRenderer";
 
 const MAX_HISTORY = 50;
@@ -22,6 +23,7 @@ type BuilderState = {
   load: (pageId: string, title: string, content: PageContent) => void;
   select: (id: string | null) => void;
   addSection: (type: string) => void;
+  duplicateSection: (id: string) => void;
   removeSection: (id: string) => void;
   reorder: (activeId: string, overId: string) => void;
   updateProps: (id: string, props: Record<string, unknown>) => void;
@@ -79,10 +81,34 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
 
     const state = get();
     const section = createSection(type);
+    const next = cloneSections(state.sections);
+    const selectedIndex = state.selectedId
+      ? next.findIndex((s) => s.id === state.selectedId)
+      : -1;
+    if (selectedIndex >= 0) {
+      next.splice(selectedIndex + 1, 0, section);
+    } else {
+      next.push(section);
+    }
     set({
       ...pushHistory(state),
-      sections: [...state.sections, section],
+      sections: next,
       selectedId: section.id,
+      dirty: true,
+    });
+  },
+
+  duplicateSection: (id) => {
+    const state = get();
+    const index = state.sections.findIndex((s) => s.id === id);
+    if (index < 0) return;
+    const copy = cloneSectionWithNewIds(state.sections[index]);
+    const next = cloneSections(state.sections);
+    next.splice(index + 1, 0, copy);
+    set({
+      ...pushHistory(state),
+      sections: next,
+      selectedId: copy.id,
       dirty: true,
     });
   },

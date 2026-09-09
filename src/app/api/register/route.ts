@@ -4,19 +4,26 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { writeAudit } from "@/lib/audit";
 import { AppError } from "@/lib/errors";
+import { handleApiError } from "@/lib/api";
 import { rateLimit } from "@/lib/security/rate-limit";
 import { createTenantWorkspace } from "@/lib/tenant/create";
 
 const registerSchema = z.object({
-  fullName: z.string().min(2).max(120),
-  email: z.string().email(),
-  password: z.string().min(8).max(128),
-  clubName: z.string().min(2).max(120),
+  fullName: z.string().min(2, "Please enter your full name").max(120),
+  email: z.string().email("Please enter a valid email"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .max(128),
+  clubName: z.string().min(2, "Please enter your club name").max(120),
   slug: z
     .string()
-    .min(2)
+    .min(2, "Website name is too short")
     .max(63)
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must be lowercase kebab-case"),
+    .regex(
+      /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+      "Website name can only use letters, numbers, and hyphens",
+    ),
 });
 
 function clientKey(request: Request) {
@@ -35,7 +42,10 @@ export async function POST(request: Request) {
     });
     if (!rl.ok) {
       return NextResponse.json(
-        { error: "Too many requests", code: "RATE_LIMITED" },
+        {
+          error: "Too many tries. Wait a moment and try again.",
+          code: "RATE_LIMITED",
+        },
         {
           status: 429,
           headers: { "Retry-After": String(rl.retryAfterSec) },
@@ -49,14 +59,22 @@ export async function POST(request: Request) {
     const email = data.email.toLowerCase();
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
-      throw new AppError("Email is already registered", 409, "EMAIL_TAKEN");
+      throw new AppError(
+        "This email already has an account. Try logging in.",
+        409,
+        "EMAIL_TAKEN",
+      );
     }
 
     const existingSlug = await prisma.tenant.findUnique({
       where: { slug: data.slug },
     });
     if (existingSlug) {
-      throw new AppError("Website address is already taken", 409, "SLUG_TAKEN");
+      throw new AppError(
+        "This website name is already taken. Pick another.",
+        409,
+        "SLUG_TAKEN",
+      );
     }
 
     const passwordHash = await hash(data.password, 12);
@@ -102,19 +120,6 @@ export async function POST(request: Request) {
       { status: 201 },
     );
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Validation failed", details: error.flatten() },
-        { status: 400 },
-      );
-    }
-    if (error instanceof AppError) {
-      return NextResponse.json(
-        { error: error.message, code: error.code },
-        { status: error.status },
-      );
-    }
-    console.error("Register error:", error);
-    return NextResponse.json({ error: "Registration failed" }, { status: 500 });
+    return handleApiError(error);
   }
 }

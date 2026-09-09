@@ -6,6 +6,7 @@ export default function AdminSponsorsPage() {
   return (
     <CrudPanel
       title="Sponsors"
+      description="Add a sponsor here. It is saved and listed below straight away."
       endpoint="/api/gaming/sponsors"
       itemsKey="sponsors"
       fields={[

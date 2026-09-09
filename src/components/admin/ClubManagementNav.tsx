@@ -10,6 +10,7 @@ const ITEMS = [
   { href: "/admin/tournaments", label: "Tournaments", icon: "♛", accent: "from-amber-500 to-orange-600" },
   { href: "/admin/matches", label: "Matches", icon: "⚔", accent: "from-rose-500 to-red-600" },
   { href: "/admin/events", label: "Events", icon: "✦", accent: "from-violet-500 to-purple-600" },
+  { href: "/admin/messages", label: "Messages", icon: "✉", accent: "from-cyan-500 to-sky-600" },
   { href: "/admin/sponsors", label: "Sponsors", icon: "◎", accent: "from-fuchsia-500 to-pink-600" },
   { href: "/admin/streams", label: "Streams", icon: "▶", accent: "from-red-500 to-rose-600" },
   { href: "/admin/leaderboards", label: "Leaderboards", icon: "▲", accent: "from-lime-500 to-green-600" },

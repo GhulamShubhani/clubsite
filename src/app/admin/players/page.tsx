@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { AdminCardGridSkeleton } from "@/components/admin/AdminSkeleton";
 
 type Team = {
   id: string;
@@ -253,7 +254,7 @@ export default function AdminPlayersPage() {
         </div>
 
         {loading ? (
-          <div className="rounded-2xl border border-zinc-200 bg-white p-10 text-center text-sm text-zinc-500">Loading roster…</div>
+          <AdminCardGridSkeleton />
         ) : visiblePlayers.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-14 text-center">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-2xl text-emerald-600">♙</div>

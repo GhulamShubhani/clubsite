@@ -36,6 +36,7 @@ export async function getDraftContent(pageId: string, ctx?: TenantContext) {
   if (!draft) throw new NotFoundError("Draft version not found");
 
   return {
+    tenantSlug: access.tenant.slug,
     page: {
       id: page.id,
       title: page.title,

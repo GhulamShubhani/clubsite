@@ -1,14 +1,14 @@
 /**
  * Resolve the database URL for the current runtime.
  *
- * Vercel/serverless cannot reliably use Supabase direct connections (port 5432
- * on db.*.supabase.co). We rewrite to the Supabase Session pooler, which
- * supports Prisma interactive transactions (unlike Transaction mode / 6543).
+ * Direct db.*.supabase.co hosts are often IPv6-only, so Prisma on Windows/local
+ * cannot reach them ("Can't reach database server"). We rewrite those URLs to
+ * the Supabase Session pooler (IPv4), which also works on Vercel.
  *
  * Override order:
- * 1. DATABASE_POOLER_URL — explicit pooler URL (recommended for production)
- * 2. On Vercel: auto-rewrite direct db.*.supabase.co:5432 → session pooler
- * 3. DATABASE_URL as-is (local dev)
+ * 1. DATABASE_POOLER_URL — explicit pooler URL
+ * 2. Direct db.*.supabase.co:5432 → session pooler
+ * 3. DATABASE_URL as-is
  */
 export function resolveDatabaseUrl(): string {
   // Never run DB URL resolution in the browser (client bundles must not import db.ts).
@@ -22,10 +22,6 @@ export function resolveDatabaseUrl(): string {
   const raw = process.env.DATABASE_URL?.trim();
   if (!raw) {
     throw new Error("DATABASE_URL is not set");
-  }
-
-  if (!process.env.VERCEL) {
-    return raw;
   }
 
   if (isSupabasePoolerHost(raw)) {
@@ -47,6 +43,9 @@ function normalizePoolParams(url: string): string {
     parsed.searchParams.delete("connection_limit");
     if (!parsed.searchParams.has("sslmode")) {
       parsed.searchParams.set("sslmode", "require");
+    }
+    if (!parsed.searchParams.has("connect_timeout")) {
+      parsed.searchParams.set("connect_timeout", "15");
     }
     if (!parsed.searchParams.has("pool_timeout")) {
       parsed.searchParams.set("pool_timeout", "20");
@@ -74,7 +73,7 @@ function rewriteDirectSupabaseToPooler(url: string): string | null {
   if (!match) return null;
 
   const [, password, projectRef, path = "/postgres"] = match;
-  const region = process.env.SUPABASE_REGION?.trim() || "ap-south-1";
+  const region = process.env.SUPABASE_REGION?.trim() || "ap-northeast-1";
 
   return normalizePoolParams(
     `postgresql://postgres.${projectRef}:${password}@aws-0-${region}.pooler.supabase.com:5432${path}`,

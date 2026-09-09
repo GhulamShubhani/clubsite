@@ -127,7 +127,8 @@ export function homePage(
       },
       { styles: shellStyles(theme(), "hero") },
     ),
-    ...sectionWrap(mid),
+    calendarBlock(),
+    ...sectionWrap(mid.filter((sec) => sec.type !== "match-calendar")),
     footer(brand, links, footerNote),
   ]);
 }
@@ -188,6 +189,26 @@ export function galleryBlock(
   items: { imageUrl: string; caption: string }[],
 ): PageSection {
   return s("gaming-gallery", { heading, items, variant: "overlay" });
+}
+
+export function calendarBlock(
+  heading = "Match calendar",
+  items?: Array<Record<string, unknown>>,
+): PageSection {
+  return s("match-calendar", {
+    heading,
+    description: "Today plus 3 days before and after. Open the full month anytime.",
+    items: items ?? [
+      { title: "Practice lobby", game: "Valorant", relativeDay: -3, time: "19:00" },
+      { title: "Academy scrim", game: "CS2", relativeDay: -2, time: "18:00" },
+      { title: "VOD review", game: "All titles", relativeDay: -1, time: "20:00" },
+      { title: "Ranked scrim", game: "Valorant", relativeDay: 0, time: "18:00" },
+      { title: "Main roster match", game: "CS2", relativeDay: 0, time: "20:30" },
+      { title: "Qualifier", game: "League of Legends", relativeDay: 1, time: "16:00" },
+      { title: "Academy match", game: "Valorant", relativeDay: 2, time: "19:00" },
+      { title: "Community cup", game: "Multi-title", relativeDay: 3, time: "14:00" },
+    ],
+  });
 }
 
 export function ctaBlock(

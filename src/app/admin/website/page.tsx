@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { AdminFormSkeleton } from "@/components/admin/AdminSkeleton";
 
 export default function AdminWebsitePage() {
   const [name, setName] = useState("");
@@ -9,17 +10,24 @@ export default function AdminWebsitePage() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    const res = await fetch("/api/website");
-    const data = await res.json();
-    if (!res.ok) {
-      setError(data.error ?? "Failed to load website");
-      return;
+    try {
+      const res = await fetch("/api/website");
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Failed to load website");
+        return;
+      }
+      setName(data.website?.name ?? "");
+      setTemplateKey(data.website?.templateKey ?? "");
+      setTemplates(data.templates ?? []);
+    } catch {
+      setError("Failed to load website");
+    } finally {
+      setLoading(false);
     }
-    setName(data.website?.name ?? "");
-    setTemplateKey(data.website?.templateKey ?? "");
-    setTemplates(data.templates ?? []);
   }, []);
 
   useEffect(() => {
@@ -58,6 +66,9 @@ export default function AdminWebsitePage() {
       {error && <p className="text-sm text-red-600">{error}</p>}
       {message && <p className="text-sm text-emerald-700">{message}</p>}
 
+      {loading ? (
+        <AdminFormSkeleton />
+      ) : (
       <form
         onSubmit={onSave}
         className="space-y-4 rounded-lg border border-zinc-200 bg-white p-4"
@@ -94,6 +105,7 @@ export default function AdminWebsitePage() {
           {saving ? "Saving…" : "Save"}
         </button>
       </form>
+      )}
     </div>
   );
 }

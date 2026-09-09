@@ -5,6 +5,7 @@ import type { PageContent } from "@/lib/page-schema";
 import { PreviewDeviceToggle } from "@/components/builder/PreviewDeviceToggle";
 import { NotFoundError, UnauthorizedError, ForbiddenError } from "@/lib/errors";
 import type { RenderDevice } from "@/components/renderer/PageRenderer";
+import { PublicSiteProvider } from "@/components/public/PublicSiteContext";
 
 type Props = {
   params: Promise<{ pageId: string }>;
@@ -46,10 +47,12 @@ export default async function AdminPreviewPage({
   }
 
   return (
-    <PreviewDeviceToggle
-      content={content}
-      title={data.page.title}
-      initialDevice={parseDevice(deviceParam)}
-    />
+    <PublicSiteProvider basePath="" tenantSlug={data.tenantSlug}>
+      <PreviewDeviceToggle
+        content={content}
+        title={data.page.title}
+        initialDevice={parseDevice(deviceParam)}
+      />
+    </PublicSiteProvider>
   );
 }

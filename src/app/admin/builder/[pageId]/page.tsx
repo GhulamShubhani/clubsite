@@ -4,6 +4,7 @@ import { getDraftContent } from "@/lib/pages/versions";
 import type { PageContent } from "@/lib/page-schema";
 import { BuilderShell } from "@/components/builder/BuilderShell";
 import { NotFoundError, UnauthorizedError, ForbiddenError } from "@/lib/errors";
+import { PublicSiteProvider } from "@/components/public/PublicSiteContext";
 
 type Props = { params: Promise<{ pageId: string }> };
 
@@ -31,10 +32,12 @@ export default async function AdminBuilderPage({ params }: Props) {
   }
 
   return (
-    <BuilderShell
-      pageId={data.page.id}
-      initialTitle={data.page.title}
-      initialContent={content}
-    />
+    <PublicSiteProvider basePath="" tenantSlug={data.tenantSlug}>
+      <BuilderShell
+        pageId={data.page.id}
+        initialTitle={data.page.title}
+        initialContent={content}
+      />
+    </PublicSiteProvider>
   );
 }

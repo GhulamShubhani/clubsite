@@ -23,6 +23,7 @@ import {
   COMPONENT_REGISTRY,
   listComponentsByCategory,
 } from "@/lib/components/registry";
+import { cloneSectionWithNewIds } from "@/lib/components/clone-section";
 import {
   resolveSectionForDevice,
   type RenderDevice,
@@ -158,6 +159,14 @@ function HeroCarouselEditor({
     onChange(list.filter((_, i) => i !== index));
   }
 
+  function duplicateSlide(index: number) {
+    const copy = structuredClone(list[index]);
+    if (typeof copy.heading === "string" && copy.heading) {
+      copy.heading = `${copy.heading} copy`;
+    }
+    onChange([...list.slice(0, index + 1), copy, ...list.slice(index + 1)]);
+  }
+
   return (
     <div className="space-y-3">
       <p className="text-xs text-zinc-500">
@@ -172,13 +181,22 @@ function HeroCarouselEditor({
             <span className="text-xs font-medium text-zinc-700">
               Slide {index + 1}
             </span>
-            <button
-              type="button"
-              onClick={() => removeSlide(index)}
-              className="cursor-pointer text-xs text-red-600 underline"
-            >
-              Remove
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => duplicateSlide(index)}
+                className="cursor-pointer text-xs text-zinc-700 underline"
+              >
+                Duplicate
+              </button>
+              <button
+                type="button"
+                onClick={() => removeSlide(index)}
+                className="cursor-pointer text-xs text-red-600 underline"
+              >
+                Remove
+              </button>
+            </div>
           </div>
           <MediaPicker
             label="Slide image"
@@ -274,6 +292,14 @@ function GridItemsEditor({
     onChange(list.filter((_, i) => i !== index));
   }
 
+  function duplicateItem(index: number) {
+    const copy = structuredClone(list[index]);
+    if (typeof copy.title === "string" && copy.title) {
+      copy.title = `${copy.title} copy`;
+    }
+    onChange([...list.slice(0, index + 1), copy, ...list.slice(index + 1)]);
+  }
+
   return (
     <div className="space-y-3">
       <p className="text-xs text-zinc-500">
@@ -290,14 +316,23 @@ function GridItemsEditor({
               <span className="text-xs font-medium text-zinc-700">
                 Item {index + 1}
               </span>
-              <button
-                type="button"
-                onClick={() => removeItem(index)}
-                disabled={list.length <= 1}
-                className="cursor-pointer text-xs text-red-600 underline disabled:cursor-not-allowed disabled:text-zinc-400 disabled:no-underline"
-              >
-                Remove
-              </button>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => duplicateItem(index)}
+                  className="cursor-pointer text-xs text-zinc-700 underline"
+                >
+                  Duplicate
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeItem(index)}
+                  disabled={list.length <= 1}
+                  className="cursor-pointer text-xs text-red-600 underline disabled:cursor-not-allowed disabled:text-zinc-400 disabled:no-underline"
+                >
+                  Remove
+                </button>
+              </div>
             </div>
             <label className="block">
               <span className="text-xs text-zinc-500">Media</span>
@@ -384,6 +419,181 @@ function GridItemsEditor({
   );
 }
 
+const SKIP_ITEM_KEYS = new Set(["id", "type", "props", "styles", "responsive", "children"]);
+
+function labelForItem(item: Record<string, unknown>, index: number) {
+  const name = item.name ?? item.title ?? item.label ?? item.heading ?? item.caption;
+  return typeof name === "string" && name.trim() ? name : `Item ${index + 1}`;
+}
+
+function blankItemLike(sample: Record<string, unknown> | undefined): Record<string, unknown> {
+  if (!sample) return { label: "New item" };
+  const next: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(sample)) {
+    if (SKIP_ITEM_KEYS.has(key)) continue;
+    if (typeof value === "number") next[key] = 0;
+    else if (typeof value === "boolean") next[key] = false;
+    else next[key] = "";
+  }
+  if (typeof next.label === "string") next.label = "New item";
+  else if (typeof next.title === "string") next.title = "New item";
+  else if (typeof next.name === "string") next.name = "New item";
+  return next;
+}
+
+function ObjectListEditor({
+  label,
+  items,
+  onChange,
+}: {
+  label: string;
+  items: Array<Record<string, unknown>>;
+  onChange: (items: Array<Record<string, unknown>>) => void;
+}) {
+  const list = items;
+
+  function updateItem(index: number, key: string, value: string) {
+    const next = list.map((item, i) => {
+      if (i !== index) return item;
+      const prev = item[key];
+      const parsed =
+        typeof prev === "number"
+          ? Number(value)
+          : typeof prev === "boolean"
+            ? value === "true"
+            : value;
+      return { ...item, [key]: parsed };
+    });
+    onChange(next);
+  }
+
+  function addItem() {
+    onChange([...list, blankItemLike(list[0])]);
+  }
+
+  function removeItem(index: number) {
+    onChange(list.filter((_, i) => i !== index));
+  }
+
+  function duplicateItem(index: number) {
+    const copy = structuredClone(list[index]);
+    for (const key of ["name", "title", "label", "heading", "caption", "gamertag"]) {
+      if (typeof copy[key] === "string" && copy[key]) {
+        copy[key] = `${copy[key]} copy`;
+      }
+    }
+    onChange([...list.slice(0, index + 1), copy, ...list.slice(index + 1)]);
+  }
+
+  const keys = list[0]
+    ? Object.keys(list[0]).filter((key) => SKIP_ITEM_KEYS.has(key) === false)
+    : ["label", "href"];
+
+  return (
+    <div className="space-y-3">
+      <p className="text-xs font-medium uppercase tracking-wide text-zinc-400">
+        {label}
+      </p>
+      {list.map((item, index) => (
+        <div
+          key={index}
+          className="space-y-2 rounded-md border border-zinc-200 bg-zinc-50 p-2"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-zinc-700">
+              {labelForItem(item, index)}
+            </span>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => duplicateItem(index)}
+                className="cursor-pointer text-xs text-zinc-700 underline"
+              >
+                Duplicate
+              </button>
+              <button
+                type="button"
+                onClick={() => removeItem(index)}
+                className="cursor-pointer text-xs text-red-600 underline"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+          {keys.map((key) => (
+            <label key={key} className="block">
+              <span className="text-xs text-zinc-500">{key}</span>
+              <input
+                className={fieldClass()}
+                value={String(item[key] ?? "")}
+                onChange={(e) => updateItem(index, key, e.target.value)}
+              />
+            </label>
+          ))}
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={addItem}
+        className="cursor-pointer rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-800 hover:bg-zinc-50"
+      >
+        + Add item
+      </button>
+    </div>
+  );
+}
+
+function NestedBlocksEditor({
+  sections,
+  onChange,
+}: {
+  sections: PageSection[];
+  onChange: (sections: PageSection[]) => void;
+}) {
+  function duplicateAt(index: number) {
+    const copy = cloneSectionWithNewIds(sections[index]);
+    onChange([
+      ...sections.slice(0, index + 1),
+      copy,
+      ...sections.slice(index + 1),
+    ]);
+  }
+
+  return (
+    <div className="space-y-2">
+      <p className="text-xs font-medium uppercase tracking-wide text-zinc-400">
+        Nested blocks
+      </p>
+      {sections.map((sec, index) => (
+        <div
+          key={sec.id}
+          className="flex items-center justify-between gap-2 rounded-md border border-zinc-200 bg-zinc-50 px-2 py-1.5"
+        >
+          <span className="truncate text-xs font-medium text-zinc-800">
+            {COMPONENT_REGISTRY[sec.type]?.label ?? sec.type}
+          </span>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => duplicateAt(index)}
+              className="cursor-pointer text-xs text-zinc-700 underline"
+            >
+              Duplicate
+            </button>
+            <button
+              type="button"
+              onClick={() => onChange(sections.filter((_, i) => i !== index))}
+              className="cursor-pointer text-xs text-red-600 underline"
+            >
+              Remove
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function ComponentLibrary() {
   const addSection = useBuilderStore((s) => s.addSection);
   const standard = listComponentsByCategory("standard");
@@ -405,6 +615,9 @@ function ComponentLibrary() {
       <div className="min-h-0 flex-1 overflow-y-auto p-3">
         <p className="mb-2 text-[11px] font-medium uppercase text-zinc-400">
           Standard
+        </p>
+        <p className="mb-2 text-[11px] leading-4 text-zinc-500">
+          Click to add. Select a block on the page, then Duplicate to copy it.
         </p>
         <ul className="mb-6 space-y-1">
           {standard.map((c) => (
@@ -448,6 +661,7 @@ function PropertiesPanel() {
   const updateStyles = useBuilderStore((s) => s.updateStyles);
   const updateResponsive = useBuilderStore((s) => s.updateResponsive);
   const replaceProps = useBuilderStore((s) => s.replaceProps);
+  const duplicateSection = useBuilderStore((s) => s.duplicateSection);
   const removeSection = useBuilderStore((s) => s.removeSection);
 
   const selected = sections.find((s) => s.id === selectedId) ?? null;
@@ -524,13 +738,22 @@ function PropertiesPanel() {
           </h2>
           <p className="mt-0.5 text-sm font-medium text-zinc-900">{label}</p>
         </div>
-        <button
-          type="button"
-          onClick={() => removeSection(selected.id)}
-          className="rounded-md px-2 py-1 text-xs text-red-600 hover:bg-red-50"
-        >
-          Remove
-        </button>
+        <div className="flex shrink-0 gap-1">
+          <button
+            type="button"
+            onClick={() => duplicateSection(selected.id)}
+            className="rounded-md px-2 py-1 text-xs text-zinc-700 hover:bg-zinc-200"
+          >
+            Duplicate
+          </button>
+          <button
+            type="button"
+            onClick={() => removeSection(selected.id)}
+            className="rounded-md px-2 py-1 text-xs text-red-600 hover:bg-red-50"
+          >
+            Remove
+          </button>
+        </div>
       </div>
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-3">
         {isTextLike ? (
@@ -723,6 +946,18 @@ function PropertiesPanel() {
           </div>
         ) : null}
 
+        {Array.isArray(props.children) &&
+        (props.children as unknown[]).some(
+          (item) => item && typeof item === "object" && "type" in item,
+        ) ? (
+          <NestedBlocksEditor
+            sections={(props.children as PageSection[]).filter(
+              (item) => item && typeof item === "object" && "type" in item,
+            )}
+            onChange={(children) => updateProps(selected.id, { children })}
+          />
+        ) : null}
+
         {selected.type === "navbar" ? (
           <div className="space-y-3">
             <p className="text-xs font-medium uppercase tracking-wide text-zinc-400">
@@ -824,6 +1059,52 @@ function PropertiesPanel() {
               onSelect={(url) => updateProps(selected.id, { posterUrl: url })}
             />
           </div>
+        ) : null}
+
+        {selected.type !== "grid" &&
+        selected.type !== "hero" &&
+        Array.isArray(props.items) &&
+        (props.items as unknown[]).length > 0 &&
+        (props.items as unknown[]).every(
+          (item) => item && typeof item === "object" && !Array.isArray(item) && !("type" in item),
+        ) ? (
+          <ObjectListEditor
+            label="Items"
+            items={props.items as Array<Record<string, unknown>>}
+            onChange={(items) => updateProps(selected.id, { items })}
+          />
+        ) : null}
+
+        {Array.isArray(props.matches) ? (
+          <ObjectListEditor
+            label="Matches"
+            items={props.matches as Array<Record<string, unknown>>}
+            onChange={(matches) => updateProps(selected.id, { matches })}
+          />
+        ) : null}
+
+        {Array.isArray(props.sponsors) ? (
+          <ObjectListEditor
+            label="Sponsors"
+            items={props.sponsors as Array<Record<string, unknown>>}
+            onChange={(sponsors) => updateProps(selected.id, { sponsors })}
+          />
+        ) : null}
+
+        {Array.isArray(props.links) ? (
+          <ObjectListEditor
+            label="Links"
+            items={props.links as Array<Record<string, unknown>>}
+            onChange={(links) => updateProps(selected.id, { links })}
+          />
+        ) : null}
+
+        {Array.isArray(props.buttons) && selected.type !== "hero" ? (
+          <ObjectListEditor
+            label="Buttons"
+            items={props.buttons as Array<Record<string, unknown>>}
+            onChange={(buttons) => updateProps(selected.id, { buttons })}
+          />
         ) : null}
 
         <div>
@@ -1069,6 +1350,8 @@ function SortableSection({
   selected: boolean;
   onSelect: () => void;
 }) {
+  const duplicateSection = useBuilderStore((s) => s.duplicateSection);
+  const removeSection = useBuilderStore((s) => s.removeSection);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: section.id });
 
@@ -1103,6 +1386,30 @@ function SortableSection({
       >
         Drag
       </button>
+      {selected ? (
+        <div className="absolute right-1 top-1 z-10 flex gap-1">
+          <button
+            type="button"
+            className="rounded bg-white/90 px-1.5 py-0.5 text-[10px] font-medium text-zinc-800 shadow-sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              duplicateSection(section.id);
+            }}
+          >
+            Duplicate
+          </button>
+          <button
+            type="button"
+            className="rounded bg-white/90 px-1.5 py-0.5 text-[10px] font-medium text-red-600 shadow-sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              removeSection(section.id);
+            }}
+          >
+            Remove
+          </button>
+        </div>
+      ) : null}
       <SectionRenderer section={resolved} device={device} />
     </div>
   );

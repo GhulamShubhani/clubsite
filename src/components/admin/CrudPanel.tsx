@@ -1,6 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import {
+  AdminEmptyState,
+  AdminListSkeleton,
+} from "@/components/admin/AdminSkeleton";
 
 export type CrudField = {
   name: string;
@@ -13,6 +17,7 @@ export type CrudField = {
 
 type CrudPanelProps = {
   title: string;
+  description?: string;
   endpoint: string;
   itemsKey: string;
   fields: CrudField[];
@@ -22,6 +27,7 @@ type CrudPanelProps = {
 
 export function CrudPanel({
   title,
+  description,
   endpoint,
   itemsKey,
   fields,
@@ -30,6 +36,7 @@ export function CrudPanel({
 }: CrudPanelProps) {
   const [items, setItems] = useState<Record<string, unknown>[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -56,6 +63,7 @@ export function CrudPanel({
     const formEl = e.currentTarget;
     setSaving(true);
     setError(null);
+    setMessage(null);
     const form = new FormData(formEl);
     const body: Record<string, unknown> = {};
     for (const field of fields) {
@@ -90,6 +98,7 @@ export function CrudPanel({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Create failed");
       formEl.reset();
+      setMessage("Saved. It now shows in the list below.");
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Create failed");
@@ -101,6 +110,7 @@ export function CrudPanel({
   async function onDelete(id: string) {
     if (!confirm("Delete this item?")) return;
     setError(null);
+    setMessage(null);
     try {
       const res = await fetch(`${endpoint}/${id}`, { method: "DELETE" });
       const data = await res.json();
@@ -114,7 +124,11 @@ export function CrudPanel({
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold text-zinc-900">{title}</h1>
+      {description ? (
+        <p className="text-sm text-zinc-600">{description}</p>
+      ) : null}
       {error && <p className="text-sm text-red-600">{error}</p>}
+      {message ? <p className="text-sm text-green-700">{message}</p> : null}
 
       <form
         onSubmit={onCreate}
@@ -168,9 +182,12 @@ export function CrudPanel({
       </form>
 
       {loading ? (
-        <p className="text-sm text-zinc-500">Loading…</p>
+        <AdminListSkeleton />
       ) : items.length === 0 ? (
-        <p className="text-sm text-zinc-500">No items yet.</p>
+        <AdminEmptyState
+          title="No data yet"
+          description="Add your first item using the form above."
+        />
       ) : (
         <ul className="divide-y divide-zinc-100 rounded-lg border border-zinc-200 bg-white">
           {items.map((item) => {

@@ -6,6 +6,7 @@ export default function AdminTournamentsPage() {
   return (
     <CrudPanel
       title="Tournaments"
+      description="Add a tournament here. It is saved and listed below straight away."
       endpoint="/api/gaming/tournaments"
       itemsKey="tournaments"
       fields={[

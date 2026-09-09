@@ -1,6 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  AdminCardsSkeleton,
+  AdminEmptyState,
+  AdminFormSkeleton,
+} from "@/components/admin/AdminSkeleton";
 
 type Plan = {
   key: string;
@@ -33,17 +38,24 @@ export default function AdminSubscriptionPage() {
   const [trial, setTrial] = useState<Trial | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   async function load() {
-    const res = await fetch("/api/subscription");
-    const data = await res.json();
-    if (!res.ok) {
-      setError(data.error ?? "Failed to load subscription");
-      return;
+    try {
+      const res = await fetch("/api/subscription");
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Failed to load subscription");
+        return;
+      }
+      setPlans(data.plans ?? []);
+      setSubscription(data.subscription ?? data.current);
+      setTrial(data.trial);
+    } catch {
+      setError("Failed to load subscription");
+    } finally {
+      setLoading(false);
     }
-    setPlans(data.plans ?? []);
-    setSubscription(data.subscription ?? data.current);
-    setTrial(data.trial);
   }
 
   useEffect(() => {
@@ -80,6 +92,13 @@ export default function AdminSubscriptionPage() {
       <h1 className="text-2xl font-semibold text-zinc-900">Subscription</h1>
       {error && <p className="text-sm text-red-600">{error}</p>}
 
+      {loading ? (
+        <>
+          <AdminFormSkeleton />
+          <AdminCardsSkeleton count={2} />
+        </>
+      ) : (
+      <>
       {subscription && (
         <section className="rounded-lg border border-zinc-200 bg-white p-4 text-sm text-zinc-600">
           <p>
@@ -166,9 +185,14 @@ export default function AdminSubscriptionPage() {
           );
         })}
       </div>
+      {plans.length === 0 ? (
+        <AdminEmptyState title="No plans available" />
+      ) : null}
       <p className="text-xs text-zinc-500">
         MVP: plan changes apply immediately with no payment gateway.
       </p>
+      </>
+      )}
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { HtmlContent } from "./HtmlContent";
 import { site } from "./site-classes";
 import { ContactForm } from "./ContactForm";
 import { EventCountdown } from "./EventCountdown";
+import { MatchCalendar, type CalendarMatch } from "./MatchCalendar";
 import { GridSection, type GridItem, type GridVariant } from "./GridSection";
 import { HeroCarousel, type HeroSlide } from "./HeroCarousel";
 import { NavbarSection } from "./NavbarSection";
@@ -717,7 +718,10 @@ export function SectionRenderer({
       return (
         <Shell section={section} className={className}>
           <HeadingBlock heading={heading || "Contact"} description={description} />
-          <ContactForm submitLabel={asString(p.submitLabel, "Send message")} />
+          <ContactForm
+            submitLabel={asString(p.submitLabel, "Send message")}
+            formTitle={heading || "Contact"}
+          />
         </Shell>
       );
 
@@ -872,6 +876,19 @@ export function SectionRenderer({
               );
             })}
           </ol>
+        </Shell>
+      );
+
+    case "match-calendar":
+      return (
+        <Shell section={section} className={className}>
+          <MatchCalendar
+            heading={heading || asString(p.title, "Match calendar")}
+            description={description || asString(p.body)}
+            items={
+              (asArray(p.items).length > 0 ? asArray(p.items) : asArray(p.matches)) as CalendarMatch[]
+            }
+          />
         </Shell>
       );
 

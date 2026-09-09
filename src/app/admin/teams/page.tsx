@@ -6,6 +6,7 @@ export default function AdminTeamsPage() {
   return (
     <CrudPanel
       title="Teams"
+      description="Add a team here. It is saved and listed below straight away."
       endpoint="/api/gaming/teams"
       itemsKey="teams"
       fields={[

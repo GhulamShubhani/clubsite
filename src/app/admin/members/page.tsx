@@ -1,6 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import {
+  AdminEmptyState,
+  AdminListSkeleton,
+} from "@/components/admin/AdminSkeleton";
 
 type Member = {
   id: string;
@@ -12,17 +16,27 @@ const ROLES = ["OWNER", "ADMIN", "EDITOR", "VIEWER"] as const;
 
 export default function AdminMembersPage() {
   const [members, setMembers] = useState<Member[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
-    const res = await fetch("/api/memberships");
-    const data = await res.json();
-    if (!res.ok) {
-      setError(data.error ?? "Failed to load members");
-      return;
+    try {
+      const res = await fetch("/api/memberships");
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Failed to load members");
+        setMembers([]);
+        return;
+      }
+      setMembers(data.members ?? []);
+    } catch {
+      setError("Failed to load members");
+      setMembers([]);
+    } finally {
+      setLoading(false);
     }
-    setMembers(data.members ?? []);
   }, []);
 
   useEffect(() => {
@@ -34,6 +48,7 @@ export default function AdminMembersPage() {
     const formEl = e.currentTarget;
     setBusy(true);
     setError(null);
+    setNotice(null);
     const form = new FormData(formEl);
     try {
       const res = await fetch("/api/memberships", {
@@ -47,6 +62,7 @@ export default function AdminMembersPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Invite failed");
       formEl.reset();
+      setNotice("Member added. They now show in the list below.");
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Invite failed");
@@ -91,6 +107,7 @@ export default function AdminMembersPage() {
     <div className="mx-auto max-w-3xl space-y-6">
       <h1 className="text-2xl font-semibold text-zinc-900">Team members</h1>
       {error && <p className="text-sm text-red-600">{error}</p>}
+      {notice ? <p className="text-sm text-green-700">{notice}</p> : null}
 
       <form
         onSubmit={onInvite}
@@ -128,6 +145,14 @@ export default function AdminMembersPage() {
         </button>
       </form>
 
+      {loading ? (
+        <AdminListSkeleton rows={3} />
+      ) : members.length === 0 ? (
+        <AdminEmptyState
+          title="No members yet"
+          description="Invite someone by email to collaborate on this club."
+        />
+      ) : (
       <ul className="divide-y divide-zinc-100 rounded-lg border border-zinc-200 bg-white">
         {members.map((m) => (
           <li
@@ -161,6 +186,7 @@ export default function AdminMembersPage() {
           </li>
         ))}
       </ul>
+      )}
     </div>
   );
 }

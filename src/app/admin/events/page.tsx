@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { AdminCardGridSkeleton } from "@/components/admin/AdminSkeleton";
 
 type EventItem = {
   id: string;
@@ -141,6 +142,7 @@ export default function AdminEventsPage() {
           <h1 className="text-3xl font-bold tracking-tight text-zinc-950">Events</h1>
           <p className="mt-2 text-sm text-zinc-600">
             Plan tournaments, community nights, and every moment your members should know about.
+            Saved events also appear on the website match calendar.
           </p>
         </div>
         <button
@@ -220,7 +222,7 @@ export default function AdminEventsPage() {
         </div>
 
         {loading ? (
-          <div className="rounded-2xl border border-zinc-200 bg-white p-10 text-center text-sm text-zinc-500">Loading your calendar…</div>
+          <AdminCardGridSkeleton count={4} columns="md:grid-cols-2" />
         ) : visibleEvents.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-14 text-center">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-100 text-2xl text-violet-600">✦</div>

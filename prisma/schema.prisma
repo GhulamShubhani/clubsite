@@ -77,6 +77,7 @@ model Tenant {
   sponsors     Sponsor[]
   streams      Stream[]
   leaderboards Leaderboard[]
+  contactMessages ContactSubmission[]
 }
 
 model Membership {
@@ -414,4 +415,19 @@ model Leaderboard {
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
+}
+
+model ContactSubmission {
+  id        String   @id @default(cuid())
+  tenantId  String
+  name      String
+  email     String
+  phone     String?
+  formTitle String?
+  message   String
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
 }

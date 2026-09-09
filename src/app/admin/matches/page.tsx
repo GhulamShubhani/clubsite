@@ -6,6 +6,7 @@ export default function AdminMatchesPage() {
   return (
     <CrudPanel
       title="Matches"
+      description="Add the matches visitors should see on the website calendar. Set the date and time, then they appear on the live site automatically — no need to republish the page."
       endpoint="/api/gaming/matches"
       itemsKey="matches"
       fields={[
@@ -28,7 +29,19 @@ export default function AdminMatchesPage() {
       ]}
       getLabel={(item) => String(item.title)}
       getMeta={(item) =>
-        [item.status, item.teamAName, item.teamBName]
+        [
+          item.status,
+          item.teamAName,
+          item.teamBName,
+          item.startsAt
+            ? new Date(String(item.startsAt)).toLocaleString(undefined, {
+                day: "numeric",
+                month: "short",
+                hour: "numeric",
+                minute: "2-digit",
+              })
+            : null,
+        ]
           .filter(Boolean)
           .map(String)
           .join(" · ") || null

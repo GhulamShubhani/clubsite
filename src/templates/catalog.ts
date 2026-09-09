@@ -19,6 +19,7 @@ export { toTemplateConfig } from "./builders";
 
 import type { TemplateDefinition } from "./builders";
 import { toTemplateConfig } from "./builders";
+import { enrichTemplate } from "./enrich";
 
 export const TEMPLATE_CATALOG: TemplateDefinition[] = [
   gamingClubTemplate(),
@@ -29,7 +30,7 @@ export const TEMPLATE_CATALOG: TemplateDefinition[] = [
   tournamentTemplate(),
   streamerTemplate(),
   cyberCafeTemplate(),
-];
+].map(enrichTemplate);
 
 export const TEMPLATE_KEYS = TEMPLATE_CATALOG.map((t) => t.key) as readonly string[];
 

@@ -44,7 +44,7 @@ export async function GET(request: Request) {
     });
     if (!rl.ok) {
       return NextResponse.json(
-        { error: "Too many requests", code: "RATE_LIMITED" },
+        { error: "Checking too fast — try again in a moment.", code: "RATE_LIMITED" },
         {
           status: 429,
           headers: { "Retry-After": String(rl.retryAfterSec) },

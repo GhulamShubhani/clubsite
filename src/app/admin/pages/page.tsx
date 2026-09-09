@@ -2,6 +2,10 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import {
+  AdminEmptyState,
+  AdminListSkeleton,
+} from "@/components/admin/AdminSkeleton";
 
 type PageRow = {
   id: string;
@@ -25,7 +29,9 @@ function statusBadge(status: string) {
 
 export default function AdminPagesPage() {
   const [pages, setPages] = useState<PageRow[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [edits, setEdits] = useState<
     Record<string, { title: string; path: string }>
@@ -33,19 +39,27 @@ export default function AdminPagesPage() {
 
   const load = useCallback(async () => {
     setError(null);
-    const res = await fetch("/api/pages");
-    const data = await res.json();
-    if (!res.ok) {
-      setError(data.error ?? "Failed to load pages");
-      return;
+    try {
+      const res = await fetch("/api/pages");
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Failed to load pages");
+        setPages([]);
+        return;
+      }
+      const list = (data.pages ?? []) as PageRow[];
+      setPages(list);
+      setEdits(
+        Object.fromEntries(
+          list.map((p) => [p.id, { title: p.title, path: p.path }]),
+        ),
+      );
+    } catch {
+      setError("Failed to load pages");
+      setPages([]);
+    } finally {
+      setLoading(false);
     }
-    const list = (data.pages ?? []) as PageRow[];
-    setPages(list);
-    setEdits(
-      Object.fromEntries(
-        list.map((p) => [p.id, { title: p.title, path: p.path }]),
-      ),
-    );
   }, []);
 
   useEffect(() => {
@@ -80,6 +94,7 @@ export default function AdminPagesPage() {
     const formEl = e.currentTarget;
     setBusy("create");
     setError(null);
+    setNotice(null);
     const form = new FormData(formEl);
     const title = String(form.get("title") ?? "").trim();
     const path = String(form.get("path") ?? "").trim();
@@ -92,6 +107,7 @@ export default function AdminPagesPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Create failed");
       formEl.reset();
+      setNotice("Page created. It is in the list below.");
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Create failed");
@@ -203,6 +219,7 @@ export default function AdminPagesPage() {
     <div className="mx-auto max-w-4xl space-y-6">
       <h1 className="text-2xl font-semibold text-zinc-900">Pages</h1>
       {error && <p className="text-sm text-red-600">{error}</p>}
+      {notice ? <p className="text-sm text-green-700">{notice}</p> : null}
 
       <form
         onSubmit={onCreate}
@@ -234,6 +251,14 @@ export default function AdminPagesPage() {
         </button>
       </form>
 
+      {loading ? (
+        <AdminListSkeleton rows={4} />
+      ) : pages.length === 0 ? (
+        <AdminEmptyState
+          title="No pages yet"
+          description="Create your first page to start building your club website."
+        />
+      ) : (
       <ul className="divide-y divide-zinc-100 rounded-lg border border-zinc-200 bg-white">
         {sorted.map((page, index) => {
           const edit = edits[page.id] ?? {
@@ -356,10 +381,8 @@ export default function AdminPagesPage() {
             </li>
           );
         })}
-        {pages.length === 0 && (
-          <li className="px-4 py-6 text-sm text-zinc-500">No pages yet.</li>
-        )}
       </ul>
+      )}
     </div>
   );
 }
