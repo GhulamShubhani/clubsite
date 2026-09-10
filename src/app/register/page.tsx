@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PasswordField } from "@/components/ui/PasswordField";
+import { PlatformAuthShell } from "@/components/platform/PlatformChrome";
 
 function slugify(value: string) {
   return value
@@ -150,11 +151,12 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-full w-full max-w-md flex-col justify-center gap-6 bg-white px-6 py-16">
+    <PlatformAuthShell>
+    <div className="flex flex-col gap-6 rounded-2xl border border-white/10 bg-white p-6 text-zinc-900 shadow-[0_24px_80px_rgba(0,0,0,0.45)]">
       <div>
         <h1 className="text-2xl font-semibold text-zinc-900">Create your website</h1>
         <p className="mt-1 text-sm text-zinc-600">
-          Register a club workspace with its own subdomain and trial.
+          Register a club workspace with its own website address and trial.
         </p>
       </div>
       <form onSubmit={onSubmit} className="flex flex-col gap-3">
@@ -271,6 +273,7 @@ export default function RegisterPage() {
           Log in
         </Link>
       </p>
-    </main>
+    </div>
+    </PlatformAuthShell>
   );
 }

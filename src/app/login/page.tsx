@@ -5,6 +5,7 @@ import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { PasswordField } from "@/components/ui/PasswordField";
+import { PlatformAuthShell } from "@/components/platform/PlatformChrome";
 
 function LoginForm() {
   const router = useRouter();
@@ -40,7 +41,7 @@ function LoginForm() {
   }
 
   return (
-    <main className="mx-auto flex min-h-full w-full max-w-md flex-col justify-center gap-6 bg-white px-6 py-16">
+    <div className="flex flex-col gap-6 rounded-2xl border border-white/10 bg-white p-6 text-zinc-900 shadow-[0_24px_80px_rgba(0,0,0,0.45)]">
       <div>
         <h1 className="text-2xl font-semibold text-zinc-900">Log in</h1>
         <p className="mt-1 text-sm text-zinc-600">
@@ -77,20 +78,20 @@ function LoginForm() {
           Create your website
         </Link>
       </p>
-    </main>
+    </div>
   );
 }
 
 export default function LoginPage() {
   return (
-    <Suspense
-      fallback={
-        <main className="mx-auto flex min-h-full w-full max-w-md items-center justify-center px-6 py-16 text-sm text-zinc-500">
-          Loading…
-        </main>
-      }
-    >
-      <LoginForm />
-    </Suspense>
+    <PlatformAuthShell>
+      <Suspense
+        fallback={
+          <p className="text-center text-sm text-zinc-400">Loading…</p>
+        }
+      >
+        <LoginForm />
+      </Suspense>
+    </PlatformAuthShell>
   );
 }

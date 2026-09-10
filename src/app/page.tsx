@@ -9,6 +9,7 @@ import type { PageContent } from "@/lib/page-schema";
 import { PageRenderer } from "@/components/renderer/PageRenderer";
 import { TrackPageView } from "@/components/analytics/TrackPageView";
 import { StructuredData } from "@/components/seo/StructuredData";
+import { PlatformLanding } from "@/components/platform/PlatformLanding";
 import { PublicSiteProvider } from "@/components/public/PublicSiteContext";
 import { PublicSiteShell } from "@/components/public/PublicSiteShell";
 import {
@@ -98,44 +99,15 @@ export default async function HomePage() {
 
   if (resolution.kind === "unknown_tenant") {
     return (
-      <main className="mx-auto flex min-h-full max-w-xl flex-col justify-center gap-4 px-6 py-16">
+      <main className="mx-auto flex min-h-full max-w-xl flex-col justify-center gap-4 bg-[#070712] px-6 py-16 text-zinc-50">
         <h1 className="text-3xl font-semibold">Club not found</h1>
-        <p className="text-zinc-600">
-          No club is registered for this address.
-        </p>
+        <p className="text-zinc-400">No club is registered for this address.</p>
+        <Link href="/" className="w-fit text-sm text-violet-300 underline">
+          Back to Clubshop
+        </Link>
       </main>
     );
   }
 
-  return (
-    <main className="mx-auto flex min-h-full w-full max-w-3xl flex-col justify-center gap-6 bg-white px-6 py-16">
-      <p className="text-sm uppercase tracking-[0.2em] text-zinc-500">
-        Clubshop platform
-      </p>
-      <h1 className="text-4xl font-semibold tracking-tight text-zinc-900">
-        Gaming Club Website Platform
-      </h1>
-      <p className="text-lg text-zinc-600">
-        Create a professional gaming club site without code. Each club gets an
-        isolated workspace and its own subdomain.
-      </p>
-      <div className="flex gap-3">
-        <Link
-          href="/register"
-          className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white"
-        >
-          Create your website
-        </Link>
-        <Link
-          href="/login"
-          className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-800"
-        >
-          Log in
-        </Link>
-      </div>
-      <p className="font-mono text-xs text-zinc-500">
-        Platform host: {host}
-      </p>
-    </main>
-  );
+  return <PlatformLanding host={host} />;
 }
