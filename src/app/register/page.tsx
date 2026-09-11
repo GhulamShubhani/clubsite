@@ -15,26 +15,6 @@ function slugify(value: string) {
     .slice(0, 63);
 }
 
-function buildSuggestions(clubName: string, currentSlug: string): string[] {
-  const base = slugify(clubName);
-  if (!base) return ["my-club", "gaming-club", "esports-hq", "play-zone"];
-
-  const candidates = [
-    base,
-    `${base}-club`,
-    `${base}-gg`,
-    `${base}-esports`,
-    `${base}-hq`,
-    `${base}-official`,
-    `team-${base}`,
-    `${base}-gaming`,
-  ];
-
-  return [...new Set(candidates)]
-    .filter((s) => s.length >= 2 && s !== currentSlug)
-    .slice(0, 6);
-}
-
 export default function RegisterPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -46,15 +26,15 @@ export default function RegisterPage() {
   const [slugMessage, setSlugMessage] = useState<string | null>(null);
   const [apiSuggestions, setApiSuggestions] = useState<string[]>([]);
 
-  const localSuggestions = useMemo(
-    () => buildSuggestions(clubName, slug),
-    [clubName, slug],
-  );
+  const [takenSlugs, setTakenSlugs] = useState<string[]>([]);
 
   const suggestions = useMemo(() => {
-    const merged = [...apiSuggestions, ...localSuggestions];
-    return [...new Set(merged)].filter((s) => s !== slug).slice(0, 6);
-  }, [apiSuggestions, localSuggestions, slug]);
+    const taken = new Set(takenSlugs);
+    // Only show names the server already checked as free.
+    return apiSuggestions
+      .filter((s) => s !== slug && !taken.has(s) && s.length >= 2)
+      .slice(0, 6);
+  }, [apiSuggestions, slug, takenSlugs]);
 
   const checkSlug = useCallback(async (value: string) => {
     if (!value || value.length < 2) {
@@ -90,8 +70,18 @@ export default function RegisterPage() {
         setApiSuggestions([]);
       } else {
         setSlugAvailable(false);
-        setSlugMessage("Already taken — try a suggestion below");
-        setApiSuggestions((data.suggestions as string[]) ?? []);
+        const free = ((data.suggestions as string[]) ?? []).filter(
+          (s) => s !== value,
+        );
+        setTakenSlugs((prev) =>
+          prev.includes(value) ? prev : [...prev, value],
+        );
+        setApiSuggestions(free);
+        setSlugMessage(
+          free.length > 0
+            ? "Already taken — try a suggestion below"
+            : "Already taken — pick a different name",
+        );
       }
     } catch {
       setSlugAvailable(null);
@@ -238,7 +228,7 @@ export default function RegisterPage() {
             </p>
           )}
 
-          {suggestions.length > 0 ? (
+          {suggestions.length > 0 && slugAvailable === false ? (
             <div className="mt-3">
               <p className="mb-2 text-xs font-medium text-zinc-600">
                 Suggestions — click to use

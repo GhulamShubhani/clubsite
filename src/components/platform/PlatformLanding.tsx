@@ -69,9 +69,9 @@ type Props = { host: string };
 
 export function PlatformLanding({ host }: Props) {
   return (
-    <div className="platform-home relative min-h-full overflow-hidden bg-[#070712] text-zinc-50">
+    <div className="platform-home relative flex min-h-screen flex-col overflow-hidden bg-[#070712] text-zinc-50">
       <div className="platform-aurora pointer-events-none absolute inset-0" aria-hidden />
-      <div className="relative flex min-h-full flex-col">
+      <div className="relative flex min-h-screen flex-1 flex-col">
         <PlatformHeader />
 
         <main className="flex-1">

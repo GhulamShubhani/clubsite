@@ -14,7 +14,7 @@ const querySchema = z.object({
 
 function suggestAlternatives(slug: string): string[] {
   const base = slug.replace(/-(club|esports|gg|hq|official|gaming)$/i, "") || slug;
-  return [
+  const extras = [
     `${base}-club`,
     `${base}-esports`,
     `${base}-gg`,
@@ -22,7 +22,11 @@ function suggestAlternatives(slug: string): string[] {
     `${base}-gaming`,
     `team-${base}`,
     `${base}-official`,
-  ].filter((s) => s !== slug && s.length <= 63);
+    `${base}-2`,
+    `${base}-pro`,
+    `${base}-site`,
+  ];
+  return [...new Set(extras)].filter((s) => s !== slug && s.length >= 2 && s.length <= 63);
 }
 
 function clientKey(request: Request) {

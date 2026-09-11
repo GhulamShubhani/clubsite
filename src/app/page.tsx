@@ -99,7 +99,7 @@ export default async function HomePage() {
 
   if (resolution.kind === "unknown_tenant") {
     return (
-      <main className="mx-auto flex min-h-full max-w-xl flex-col justify-center gap-4 bg-[#070712] px-6 py-16 text-zinc-50">
+      <main className="flex min-h-screen flex-col justify-center bg-[#070712] px-6 py-16 text-zinc-50">
         <h1 className="text-3xl font-semibold">Club not found</h1>
         <p className="text-zinc-400">No club is registered for this address.</p>
         <Link href="/" className="w-fit text-sm text-violet-300 underline">
