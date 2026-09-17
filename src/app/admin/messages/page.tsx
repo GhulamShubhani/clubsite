@@ -11,6 +11,8 @@ type Message = {
   name: string;
   email: string;
   message: string;
+  phone?: string | null;
+  formTitle?: string | null;
   createdAt: string;
 };
 
@@ -130,6 +132,9 @@ export default function AdminMessagesPage() {
         <ul className="space-y-3">
           {messages.map((m) => {
             const details = parseDetails(m.message);
+            const formTitle = m.formTitle || details.formTitle;
+            const phone = m.phone || details.phone;
+            const body = m.phone || m.formTitle ? m.message : details.message;
             return (
             <li
               key={m.id}
@@ -137,9 +142,9 @@ export default function AdminMessagesPage() {
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  {details.formTitle ? (
+                  {formTitle ? (
                     <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-                      {details.formTitle}
+                      {formTitle}
                     </p>
                   ) : null}
                   <p className="font-medium text-zinc-900">{m.name}</p>
@@ -151,13 +156,13 @@ export default function AdminMessagesPage() {
                       {m.email}
                     </a>
                   </p>
-                  {details.phone ? (
+                  {phone ? (
                     <p className="text-sm text-zinc-500">
                       <a
-                        href={`tel:${details.phone}`}
+                        href={`tel:${phone}`}
                         className="underline hover:text-zinc-800"
                       >
-                        {details.phone}
+                        {phone}
                       </a>
                     </p>
                   ) : null}
@@ -176,7 +181,7 @@ export default function AdminMessagesPage() {
                 </div>
               </div>
               <p className="mt-3 whitespace-pre-wrap text-sm text-zinc-700">
-                {details.message}
+                {body}
               </p>
             </li>
             );

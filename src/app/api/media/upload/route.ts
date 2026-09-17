@@ -6,9 +6,8 @@ import { writeAudit } from "@/lib/audit";
 import { assertWithinStorageLimit } from "@/lib/billing/limits";
 import { prisma } from "@/lib/db";
 import { AppError } from "@/lib/errors";
+import { maxBytesForMime } from "@/lib/media-limits";
 import { requireTenantAccess, tenantScope } from "@/lib/tenant/access";
-
-const MAX_BYTES = 20_000_000;
 
 const ALLOWED = new Set([
   "image/jpeg",
@@ -47,8 +46,13 @@ export async function POST(request: Request) {
       );
     }
 
-    if (file.size <= 0 || file.size > MAX_BYTES) {
-      throw new AppError("File must be between 1 byte and 20MB", 400, "SIZE");
+    if (file.size <= 0 || file.size > maxBytesForMime(mimeType)) {
+      const limitMb = mimeType.startsWith("video/") ? "20MB" : "5MB";
+      throw new AppError(
+        `File must be between 1 byte and ${limitMb}`,
+        400,
+        "SIZE",
+      );
     }
 
     await assertWithinStorageLimit(ctx.tenant.id, file.size);

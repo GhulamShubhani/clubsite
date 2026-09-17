@@ -2,6 +2,13 @@ import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { AppError } from "@/lib/errors";
 
+function isZodError(error: unknown): error is ZodError {
+  if (error instanceof ZodError) return true;
+  if (!error || typeof error !== "object") return false;
+  const name = (error as { name?: string }).name;
+  return name === "ZodError" || name === "$ZodError";
+}
+
 export function jsonOk<T>(data: T, status = 200) {
   return NextResponse.json(data, { status });
 }
@@ -23,8 +30,9 @@ function isDatabaseUnreachable(error: unknown): boolean {
 }
 
 export function handleApiError(error: unknown) {
-  if (error instanceof ZodError) {
-    const first = error.issues[0]?.message ?? "Please check the form and try again.";
+  if (isZodError(error)) {
+    const first =
+      error.issues[0]?.message ?? "Please check the form and try again.";
     return NextResponse.json(
       { error: first, code: "VALIDATION" },
       { status: 400 },

@@ -5,6 +5,11 @@ import {
   AdminEmptyState,
   AdminListSkeleton,
 } from "@/components/admin/AdminSkeleton";
+import {
+  MAX_IMAGE_BYTES,
+  fileSizeError,
+  formatBytes,
+} from "@/lib/media-limits";
 
 type MediaItem = {
   id: string;
@@ -89,16 +94,27 @@ export default function AdminMediaPage() {
 
   async function onUpload(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const form = e.currentTarget;
+    const file = (form.elements.namedItem("file") as HTMLInputElement | null)
+      ?.files?.[0];
+    if (!file) {
+      setError("Choose a file to upload.");
+      return;
+    }
+    const sizeError = fileSizeError(file);
+    if (sizeError) {
+      setError(sizeError);
+      return;
+    }
     setSaving(true);
     setError(null);
-    const form = e.currentTarget;
     const fd = new FormData(form);
     try {
       const res = await fetch("/api/media/upload", {
         method: "POST",
         body: fd,
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "Upload failed");
       form.reset();
       await load();
@@ -167,6 +183,10 @@ export default function AdminMediaPage() {
         className="flex flex-wrap items-end gap-3 rounded-lg border border-zinc-200 bg-white p-4"
       >
         <p className="w-full text-sm font-medium text-zinc-700">Upload file</p>
+        <p className="w-full text-xs text-zinc-500">
+          Images up to {formatBytes(MAX_IMAGE_BYTES)}. Larger files are rejected
+          before upload so the page does not hang.
+        </p>
         <label className="flex flex-col gap-1 text-sm">
           <span className="text-zinc-600">File (jpeg/png/webp/gif/mp4)</span>
           <input
@@ -175,6 +195,12 @@ export default function AdminMediaPage() {
             accept="image/jpeg,image/png,image/webp,image/gif,video/mp4"
             required
             className="text-sm"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              const sizeError = fileSizeError(file);
+              setError(sizeError);
+            }}
           />
         </label>
         <button
@@ -277,19 +303,33 @@ export default function AdminMediaPage() {
                   </button>
                 </div>
               ) : (
-                <>
-                  <p className="truncate font-medium text-zinc-900">
-                    {item.originalName}
-                  </p>
-                  <a
-                    href={item.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="truncate text-zinc-500 underline"
-                  >
-                    {item.url}
-                  </a>
-                </>
+                <div className="flex min-w-0 items-center gap-3">
+                  {item.mimeType.startsWith("image/") ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={item.url}
+                      alt=""
+                      className="h-12 w-12 shrink-0 rounded border border-zinc-200 object-cover bg-zinc-100"
+                    />
+                  ) : (
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded border border-zinc-200 bg-zinc-100 text-[10px] text-zinc-500">
+                      file
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-zinc-900">
+                      {item.originalName}
+                    </p>
+                    <a
+                      href={item.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="truncate text-zinc-500 underline"
+                    >
+                      {item.url}
+                    </a>
+                  </div>
+                </div>
               )}
             </div>
             <div className="flex shrink-0 gap-3">

@@ -84,6 +84,7 @@ export default async function PublicCatchAllPage({ params }: Props) {
         navbar={chrome.navbar}
         footer={chrome.footer}
         themeTokens={bundle?.themeTokens}
+        googleAnalyticsId={bundle?.website.googleAnalyticsId}
       >
         {bundle ? (
           <StructuredData

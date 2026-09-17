@@ -25,8 +25,20 @@ function clientKey(request: Request) {
   );
 }
 
+function slugFromReferer(request: Request) {
+  const referer = request.headers.get("referer") ?? "";
+  try {
+    const url = new URL(referer);
+    const match = url.pathname.match(/^\/club\/([^/]+)/);
+    if (match?.[1]) return decodeURIComponent(match[1]);
+  } catch {
+    return undefined;
+  }
+  return undefined;
+}
+
 async function resolvePublicTenant(request: Request, slug?: string) {
-  const fromQuery = slug?.trim().toLowerCase();
+  const fromQuery = slug?.trim().toLowerCase() || slugFromReferer(request);
   if (fromQuery) {
     return resolveTenantFromSlug(fromQuery);
   }
@@ -52,7 +64,7 @@ export async function POST(request: Request) {
     });
     if (!rl.ok) {
       return NextResponse.json(
-        { error: "Too many requests", code: "RATE_LIMITED" },
+        { error: "Too many requests. Please wait a moment and try again.", code: "RATE_LIMITED" },
         {
           status: 429,
           headers: { "Retry-After": String(rl.retryAfterSec) },
@@ -68,21 +80,17 @@ export async function POST(request: Request) {
     }
     const body = contactSchema.parse(json);
     const tenant = await resolvePublicTenant(request, body.slug);
-
-    const extra = [
-      body.formTitle?.trim() ? `Form: ${body.formTitle.trim()}` : null,
-      body.phone?.trim() ? `Phone: ${body.phone.trim()}` : null,
-    ].filter(Boolean);
-    const message = extra.length
-      ? `${extra.join("\n")}\n\n${body.message}`
-      : body.message;
+    const phone = body.phone?.trim() || null;
+    const formTitle = body.formTitle?.trim() || null;
 
     await prisma.contactSubmission.create({
       data: {
         tenantId: tenant.id,
         name: body.name,
         email: body.email,
-        message,
+        phone,
+        formTitle,
+        message: body.message,
       },
     });
 

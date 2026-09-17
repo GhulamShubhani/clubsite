@@ -111,23 +111,26 @@ export default function AdminNavigationPage() {
       <>
       <div className="space-y-3 rounded-lg border border-zinc-200 bg-white p-4">
         {items.map((item, index) => (
-          <div key={index} className="flex flex-wrap gap-2">
+          <div
+            key={index}
+            className="flex flex-col gap-2 rounded-md border border-zinc-100 p-3 sm:flex-row sm:items-center"
+          >
             <input
               value={item.label}
               onChange={(e) => updateItem(index, { label: e.target.value })}
               placeholder="Label"
-              className="min-w-32 flex-1 rounded-md border border-zinc-300 px-3 py-2 text-sm"
+              className="w-full min-w-0 rounded-md border border-zinc-300 px-3 py-2.5 text-base sm:flex-1 sm:text-sm"
             />
             <input
               value={item.href}
               onChange={(e) => updateItem(index, { href: e.target.value })}
               placeholder="/path"
-              className="min-w-32 flex-1 rounded-md border border-zinc-300 px-3 py-2 font-mono text-sm"
+              className="w-full min-w-0 rounded-md border border-zinc-300 px-3 py-2.5 font-mono text-base sm:flex-1 sm:text-sm"
             />
             <button
               type="button"
               onClick={() => removeItem(index)}
-              className="text-sm text-red-600 underline"
+              className="self-start py-2 text-sm text-red-600 underline sm:shrink-0"
             >
               Remove
             </button>

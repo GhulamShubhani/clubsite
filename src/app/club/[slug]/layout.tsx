@@ -32,6 +32,7 @@ export default async function ClubPublicLayout({ children, params }: Props) {
         navbar={chrome.navbar}
         footer={chrome.footer}
         themeTokens={bundle?.themeTokens}
+        googleAnalyticsId={bundle?.website.googleAnalyticsId}
       >
         {children}
       </PublicSiteShell>

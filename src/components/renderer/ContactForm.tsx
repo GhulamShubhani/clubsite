@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { usePathname } from "next/navigation";
 import { usePublicSite } from "@/components/public/PublicSiteContext";
 
 type Props = {
@@ -11,11 +12,22 @@ type Props = {
 const fieldClass =
   "w-full rounded-md border border-zinc-300 px-3 py-2 text-sm";
 
+function slugFromPath(pathname: string) {
+  const match = pathname.match(/^\/club\/([^/]+)/);
+  if (!match?.[1]) return "";
+  try {
+    return decodeURIComponent(match[1]);
+  } catch {
+    return match[1];
+  }
+}
+
 export function ContactForm({
   submitLabel = "Send message",
   formTitle = "Contact",
 }: Props) {
   const { tenantSlug } = usePublicSite();
+  const pathname = usePathname() ?? "";
   const [status, setStatus] = useState<"idle" | "sending" | "ok" | "error">(
     "idle",
   );
@@ -27,13 +39,14 @@ export function ContactForm({
     setStatus("sending");
     setError(null);
     const fd = new FormData(formEl);
+    const slug = tenantSlug || slugFromPath(pathname);
     const body = {
       name: String(fd.get("name") ?? "").trim(),
       email: String(fd.get("email") ?? "").trim(),
       phone: String(fd.get("phone") ?? "").trim(),
       formTitle,
       message: String(fd.get("message") ?? "").trim(),
-      ...(tenantSlug ? { slug: tenantSlug } : {}),
+      ...(slug ? { slug } : {}),
     };
     try {
       const res = await fetch("/api/contact", {
@@ -47,15 +60,40 @@ export function ContactForm({
       };
       if (!res.ok || !data.ok) {
         setStatus("error");
-        setError(data.error ?? "Could not send. Please try again.");
+        setError(
+          data.error && !/internal server error/i.test(data.error)
+            ? data.error
+            : "Could not send your message. Please try again in a moment.",
+        );
         return;
       }
       setStatus("ok");
       formEl.reset();
     } catch {
       setStatus("error");
-      setError("Could not send. Please try again.");
+      setError("Could not send your message. Please try again in a moment.");
     }
+  }
+
+  if (status === "ok") {
+    return (
+      <div
+        className="mx-auto max-w-md rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-5 text-center"
+        role="status"
+      >
+        <p className="text-base font-semibold text-emerald-900">Thank you</p>
+        <p className="mt-1 text-sm text-emerald-800">
+          Your message has been sent. We will get back to you soon.
+        </p>
+        <button
+          type="button"
+          onClick={() => setStatus("idle")}
+          className="mt-4 text-sm font-medium text-emerald-900 underline"
+        >
+          Send another message
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -112,11 +150,6 @@ export function ContactForm({
       >
         {status === "sending" ? "Sending…" : submitLabel}
       </button>
-      {status === "ok" ? (
-        <p className="text-sm text-green-700">
-          Sent. Thank you — we will get back to you.
-        </p>
-      ) : null}
       {status === "error" && error ? (
         <p className="text-sm text-red-600">{error}</p>
       ) : null}

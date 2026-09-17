@@ -10,7 +10,7 @@ import {
 
 const seoSchema = z.object({
   seoTitle: z.string().max(200).nullable().optional(),
-  seoDescription: z.string().max(500).nullable().optional(),
+  seoDescription: z.string().max(160).nullable().optional(),
   faviconUrl: z.string().url().nullable().optional().or(z.literal("")),
   ogImageUrl: z.string().url().nullable().optional().or(z.literal("")),
   canonicalUrl: z.string().url().nullable().optional().or(z.literal("")),

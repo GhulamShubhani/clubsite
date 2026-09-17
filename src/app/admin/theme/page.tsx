@@ -160,6 +160,9 @@ export default function AdminThemePage() {
         "--preview-border": tokens.border,
         "--preview-heading": tokens.fontHeading,
         "--preview-body": tokens.fontBody,
+        "--color-primary": tokens.primary,
+        backgroundColor: tokens.background,
+        color: tokens.text,
       }) as React.CSSProperties,
     [tokens],
   );
@@ -321,13 +324,14 @@ export default function AdminThemePage() {
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
               <div>
                 <h2 className="text-sm font-semibold text-white">Live preview</h2>
-                <p className="text-xs text-zinc-400">Updates as you edit</p>
+                <p className="text-xs text-zinc-400">Updates as you edit — no reload needed</p>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
-                <span className="h-2.5 w-2.5 rounded-full bg-yellow-400" />
-                <span className="h-2.5 w-2.5 rounded-full bg-green-400" />
-              </div>
+              <span
+                className="rounded-full px-2.5 py-1 text-[10px] font-bold text-white"
+                style={{ background: tokens.primary }}
+              >
+                Primary
+              </span>
             </div>
             <div className="overflow-x-auto p-3 sm:p-5">
               <div className="mx-auto max-w-2xl overflow-hidden rounded-xl border border-white/10" style={previewStyle}>
@@ -335,13 +339,13 @@ export default function AdminThemePage() {
                   className="flex items-center justify-between gap-4 px-5 py-4"
                   style={{ background: "var(--preview-surface)", color: "var(--preview-text)", borderBottom: "1px solid var(--preview-border)" }}
                 >
-                  <span className="truncate text-sm font-bold" style={{ fontFamily: "var(--preview-heading)" }}>
-                    NOVA<span style={{ color: "var(--preview-primary)" }}>//</span>CLUB
+                  <span className="truncate text-sm font-bold" style={{ fontFamily: tokens.fontHeading, color: tokens.text }}>
+                    NOVA<span style={{ color: tokens.primary }}>//</span>CLUB
                   </span>
                   <div className="hidden gap-4 text-[10px] sm:flex" style={{ color: "var(--preview-muted)" }}>
                     <span>Teams</span><span>Events</span><span>About</span>
                   </div>
-                  <span className="rounded-md px-2.5 py-1 text-[10px] font-bold text-white" style={{ background: "var(--preview-primary)" }}>
+                  <span className="rounded-md px-2.5 py-1 text-[10px] font-bold text-white" style={{ background: tokens.primary }}>
                     Join now
                   </span>
                 </div>
@@ -349,19 +353,19 @@ export default function AdminThemePage() {
                   className="relative overflow-hidden px-6 py-14 sm:px-10"
                   style={{ background: "linear-gradient(135deg, var(--preview-secondary), var(--preview-background))", color: "var(--preview-text)" }}
                 >
-                  <div className="absolute -right-12 -top-16 h-48 w-48 rounded-full blur-3xl" style={{ background: "var(--preview-primary)", opacity: 0.25 }} />
+                  <div className="absolute -right-12 -top-16 h-48 w-48 rounded-full blur-3xl" style={{ background: tokens.primary, opacity: 0.25 }} />
                   <div className="relative">
                     <span className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: "var(--preview-accent)" }}>
                       Season 2026 · Competitive gaming
                     </span>
-                    <h3 className="mt-3 max-w-md text-3xl font-black leading-tight sm:text-4xl" style={{ fontFamily: "var(--preview-heading)" }}>
-                      Find your squad.<br /><span style={{ color: "var(--preview-primary)" }}>Own the moment.</span>
+                    <h3 className="mt-3 max-w-md text-3xl font-black leading-tight sm:text-4xl" style={{ fontFamily: tokens.fontHeading, color: tokens.text }}>
+                      Find your squad.<br /><span style={{ color: tokens.primary }}>Own the moment.</span>
                     </h3>
                     <p className="mt-3 max-w-sm text-xs leading-5" style={{ color: "var(--preview-muted)", fontFamily: "var(--preview-body)" }}>
                       Tournaments, training, and a community built for players who want to level up.
                     </p>
                     <div className="mt-5 flex flex-wrap gap-2">
-                      <span className="rounded-lg px-3 py-2 text-[11px] font-bold text-white" style={{ background: "var(--preview-primary)" }}>Explore teams</span>
+                      <span className="rounded-lg px-3 py-2 text-[11px] font-bold text-white" style={{ background: tokens.primary }}>Explore teams</span>
                       <span className="rounded-lg border px-3 py-2 text-[11px] font-semibold" style={{ borderColor: "var(--preview-border)", color: "var(--preview-text)" }}>View events</span>
                     </div>
                   </div>

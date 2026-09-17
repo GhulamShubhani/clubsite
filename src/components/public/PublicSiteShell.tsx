@@ -4,6 +4,7 @@ import type { PublicNavItem } from "@/lib/tenant/public-site-utils";
 import { themeTokensToCssVars } from "@/lib/tenant/public-site-utils";
 import { SiteNavbar } from "@/components/renderer/SiteNavbar";
 import { SectionRenderer } from "@/components/renderer/SectionRenderer";
+import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { SiteLink } from "./SiteLink";
 
 type Props = {
@@ -12,6 +13,7 @@ type Props = {
   navbar?: PageSection;
   footer?: PageSection;
   themeTokens?: Record<string, unknown>;
+  googleAnalyticsId?: string | null;
   children: ReactNode;
 };
 
@@ -46,6 +48,7 @@ export function PublicSiteShell({
   navbar,
   footer,
   themeTokens,
+  googleAnalyticsId,
   children,
 }: Props) {
   return (
@@ -53,6 +56,7 @@ export function PublicSiteShell({
       className="site-theme flex min-h-full w-full flex-col"
       style={themeTokens ? themeTokensToCssVars(themeTokens) : undefined}
     >
+      <GoogleAnalytics measurementId={googleAnalyticsId} />
       {navbar ? (
         <SectionRenderer section={navbar} />
       ) : (

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AdminListSkeleton } from "@/components/admin/AdminSkeleton";
+import { fileSizeError, formatBytes, MAX_IMAGE_BYTES } from "@/lib/media-limits";
 
 type MediaItem = {
   id: string;
@@ -58,6 +59,11 @@ export function MediaPicker({
   }, [open, q, load, value]);
 
   async function uploadFile(file: File) {
+    const sizeError = fileSizeError(file);
+    if (sizeError) {
+      setError(sizeError);
+      return;
+    }
     setUploading(true);
     setError(null);
     try {
@@ -170,7 +176,7 @@ export function MediaPicker({
                   onClick={() => fileRef.current?.click()}
                   className="cursor-pointer rounded-md bg-zinc-900 px-3 py-2 text-xs font-medium text-white hover:bg-zinc-800 disabled:opacity-60"
                 >
-                  {uploading ? "Uploading…" : "Choose file (PNG, JPG, WebP…)"}
+                  {uploading ? "Uploading…" : `Choose file (max ${formatBytes(MAX_IMAGE_BYTES)})`}
                 </button>
               </div>
 

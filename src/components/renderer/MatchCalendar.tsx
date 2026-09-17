@@ -330,12 +330,13 @@ export function MatchCalendar({
           <div className="flex items-center justify-between gap-2">
             <button
               type="button"
+              aria-label="Previous month"
               onClick={() =>
                 setMonthCursor(
                   new Date(monthCursor.getFullYear(), monthCursor.getMonth() - 1, 1),
                 )
               }
-              className="rounded-md px-2 py-1 text-sm text-[var(--color-text)] hover:bg-[var(--color-background,#00000014)]"
+              className="rounded-md px-3 py-2 text-sm text-[var(--color-text)] hover:bg-[var(--color-background,#00000014)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary,#6366f1)]"
             >
               ‹
             </button>
@@ -369,12 +370,13 @@ export function MatchCalendar({
             </div>
             <button
               type="button"
+              aria-label="Next month"
               onClick={() =>
                 setMonthCursor(
                   new Date(monthCursor.getFullYear(), monthCursor.getMonth() + 1, 1),
                 )
               }
-              className="rounded-md px-2 py-1 text-sm text-[var(--color-text)] hover:bg-[var(--color-background,#00000014)]"
+              className="rounded-md px-3 py-2 text-sm text-[var(--color-text)] hover:bg-[var(--color-background,#00000014)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary,#6366f1)]"
             >
               ›
             </button>
@@ -401,11 +403,11 @@ export function MatchCalendar({
                   type="button"
                   key={date.toISOString()}
                   onClick={() => selectDay(date)}
-                  className={`min-h-12 rounded-lg border px-1 py-1.5 text-center ${
+                  className={`min-h-12 rounded-lg border px-1 py-1.5 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary,#6366f1)] ${
                     isSelected
                       ? "border-[var(--color-primary,#6366f1)] bg-[var(--color-primary,#6366f1)] text-white"
                       : isToday
-                        ? "border-[var(--color-primary,#6366f1)]"
+                        ? "border-[var(--color-primary,#6366f1)] bg-[color-mix(in_srgb,var(--color-primary,#6366f1)_18%,transparent)] font-bold ring-2 ring-[var(--color-primary,#6366f1)]"
                         : "border-transparent hover:border-[var(--color-border)]"
                   }`}
                 >

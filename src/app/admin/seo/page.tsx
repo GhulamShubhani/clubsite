@@ -175,12 +175,18 @@ export default function AdminSeoPage() {
               <textarea
                 value={seo.seoDescription ?? ""}
                 onChange={(e) => setSeo((s) => ({ ...s, seoDescription: e.target.value }))}
-                maxLength={500}
+                maxLength={160}
                 rows={4}
                 placeholder="Join our gaming community for tournaments, competitive teams, events, and weekly scrims."
                 className="mt-2 w-full resize-y rounded-xl border border-zinc-200 px-3 py-3 text-sm leading-6 text-zinc-800 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
               />
-              <span className="mt-1 block text-xs text-zinc-500">Aim for 120–160 characters. Explain what makes your project useful.</span>
+              {descriptionLength > 155 ? (
+                <span className="mt-1 block text-xs font-medium text-rose-600">
+                  Recommended limit is 160 characters. Search results may truncate longer text.
+                </span>
+              ) : (
+                <span className="mt-1 block text-xs text-zinc-500">Aim for 120–160 characters. Explain what makes your project useful.</span>
+              )}
             </label>
           </section>
 

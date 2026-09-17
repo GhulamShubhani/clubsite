@@ -59,6 +59,7 @@ export default async function HomePage() {
           navbar={chrome.navbar}
           footer={chrome.footer}
           themeTokens={bundle?.themeTokens}
+          googleAnalyticsId={bundle?.website.googleAnalyticsId}
         >
           {bundle ? (
             <StructuredData

@@ -4,6 +4,7 @@ import {
   parseNavigationItems,
   type PublicSiteBundle,
 } from "@/lib/tenant/public-site-utils";
+import { analyticsIdFromTokens } from "@/lib/analytics-id";
 
 export type { PublicNavItem, PublicSiteBundle } from "@/lib/tenant/public-site-utils";
 export {
@@ -50,6 +51,7 @@ export async function getPublicSiteBundle(
       ogImageUrl: website.ogImageUrl,
       canonicalUrl: website.canonicalUrl,
       robotsIndex: website.robotsIndex,
+      googleAnalyticsId: analyticsIdFromTokens(website.theme?.tokens),
     },
     themeTokens: normalizeThemeTokens(website.theme?.tokens),
     navigationItems: parseNavigationItems(website.navigation[0]?.items),

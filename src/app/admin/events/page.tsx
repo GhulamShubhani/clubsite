@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { AdminCardGridSkeleton } from "@/components/admin/AdminSkeleton";
+import { EventMonthCalendar } from "@/components/admin/EventMonthCalendar";
 
 type EventItem = {
   id: string;
@@ -170,6 +171,8 @@ export default function AdminEventsPage() {
           </div>
         ))}
       </div>
+
+      <EventMonthCalendar events={events} />
 
       {showForm && (
         <form onSubmit={onCreate} className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">

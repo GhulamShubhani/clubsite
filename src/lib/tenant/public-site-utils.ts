@@ -17,6 +17,7 @@ export type PublicSiteBundle = {
     ogImageUrl: string | null;
     canonicalUrl: string | null;
     robotsIndex: boolean;
+    googleAnalyticsId: string | null;
   };
   themeTokens: Record<string, unknown>;
   navigationItems: PublicNavItem[];
